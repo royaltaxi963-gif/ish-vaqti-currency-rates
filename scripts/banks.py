@@ -69,8 +69,10 @@ BANKS: tuple[Bank, ...] = (
         "asaka-bank",
         "Asakabank",
         unavailable_reason=(
-            "official site asakabank.uz renders rates client-side from "
-            "back.asakabank.uz; no public rate endpoint was reachable"
+            "asakabank.uz/uz/press-center/exchange-rates renders its rate table "
+            "client-side and serves no rates; its API host back.asakabank.uz "
+            "answers HTTP 403 to every path from the collector network, so no "
+            "official rate source is reachable"
         ),
     ),
     Bank(
@@ -110,8 +112,10 @@ BANKS: tuple[Bank, ...] = (
         "nbu",
         "O\u2018zmilliybank",
         unavailable_reason=(
-            "official site nbu.uz (185.104.210.5) refuses all connections on "
-            "ports 80 and 443 from the collector network"
+            "official site nbu.uz (185.104.210.5, also www.nbu.uz) accepts no "
+            "TCP connection on ports 80 or 443 from the collector network (TLS "
+            "handshake and HTTP request both time out); no official rate source "
+            "is reachable"
         ),
     ),
     Bank(
@@ -120,15 +124,8 @@ BANKS: tuple[Bank, ...] = (
         (
             Source(
                 "ipoteka-html",
-                "https://ipotekabank.uz/services/currency/usd-uzs/",
+                "https://ipotekabank.uz/services/currency/",
                 "cash",
-                ("USD",),
-            ),
-            Source(
-                "ipoteka-html",
-                "https://ipotekabank.uz/services/currency/eur-uzs/",
-                "cash",
-                ("EUR",),
             ),
         ),
     ),
@@ -177,8 +174,10 @@ BANKS: tuple[Bank, ...] = (
         "kapitalbank",
         "Kapitalbank",
         unavailable_reason=(
-            "official site kapitalbank.uz is behind a Cloudflare anti-bot "
-            "challenge (HTTP 403); access must not be bypassed"
+            "official site kapitalbank.uz answers HTTP 403 with a Cloudflare "
+            "anti-bot challenge (\"Just a moment...\"); kapital24.uz redirects "
+            "there and no public rate API host resolves, so access must not be "
+            "bypassed and no official rate source is reachable"
         ),
     ),
 )

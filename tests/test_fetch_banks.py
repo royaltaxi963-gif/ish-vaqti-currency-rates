@@ -57,7 +57,7 @@ def good_mapping() -> dict:
     for bank in BANKS:
         for source in bank.sources:
             if source.kind == "ipoteka-html":
-                mapping[source.url] = fixture(f"ipoteka_{source.sections[0].lower()}.html")
+                mapping[source.url] = fixture("ipoteka_index.html")
             else:
                 mapping[source.url] = fixture(FIXTURE_BY_KIND[source.kind])
     return mapping

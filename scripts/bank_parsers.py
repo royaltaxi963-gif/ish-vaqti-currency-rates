@@ -569,49 +569,76 @@ def _resolve_nuxt(graph: list, index, depth: int = 0):
 
 
 # --------------------------------------------------------------------------- #
-# Ipoteka-bank (https://ipotekabank.uz/services/currency/<pair>/)
+# Ipoteka-bank (https://ipotekabank.uz/services/currency/)
 # --------------------------------------------------------------------------- #
 
-_IPOTEKA_BUY = re.compile(
-    r"Sotib olish kursi:\s*1\s*([A-Z]{3})\s*=\s*([\d\s\u00a0.,]+?)\s*UZS"
-)
-_IPOTEKA_SELL = re.compile(
-    r"Sotish kursi:\s*1\s*([A-Z]{3})\s*=\s*([\d\s\u00a0.,]+?)\s*UZS"
-)
+# One official index page publishes every currency across three channels:
+# ``all`` -> Filialda (branch cash), ``atms`` -> Bankomatda (ATM) and
+# ``mobileApp`` -> Ilovada (mobile app). Each panel is a
+# ``Valyuta | Xarid (buy) | Sotish (sell) | MB kursi`` table. The page stamp is
+# an ISO ``<time datetime="...">`` (Asia/Tashkent). The bank does not publish
+# RUB here, so the collector must never invent one for it.
+_IPOTEKA_TABS = (("all", "cash"), ("mobileApp", "mobile"), ("atms", "mobile"))
+_IPOTEKA_UPDATE = re.compile(r"<time[^>]*datetime=\"([^\"]+)\"", re.I)
 
 
-def parse_ipoteka(page: str, code: str, checked_at: datetime) -> dict:
-    """Parse one Ipoteka-bank per-currency page.
+def parse_ipoteka(page: str, checked_at: datetime) -> dict:
+    """Parse Ipoteka-bank's official currency index page.
 
-    The branch rate is published as ``Sotib olish kursi: 1 USD = 11915 UZS`` and
-    ``Sotish kursi: 1 USD = 12030 UZS``; the stamp appears as
-    ``Обновлено DD.MM.YYYY HH:MM:SS``. ``code`` is the currency of the page.
+    Returns branch (``cash``), ATM and app (``mobile``) rates for every currency
+    the bank publishes. ATM/app fill ``mobile`` only when the app does not
+    publish that currency, matching the dataset's ``mobile = app or ATM`` rule.
     """
-    if code not in SUPPORTED_CURRENCIES:
-        raise LayoutError(f"Ipoteka: unsupported currency {code}")
-    buy = _ipoteka_value(_IPOTEKA_BUY, page, code)
-    sell = _ipoteka_value(_IPOTEKA_SELL, page, code)
-    if buy is None and sell is None:
-        raise LayoutError(f"Ipoteka: no {code} rate found")
-    stamp = re.search(
-        r"(?:Обновлено|yangilangan)\s*(\d{1,2}\.\d{1,2}\.\d{4}\s+\d{1,2}:\d{2}:\d{2})",
-        page,
-    )
+    stamp = _IPOTEKA_UPDATE.search(page)
     published = _parse_dt(stamp.group(1), checked_at) if stamp else None
+
     rates: dict = {}
-    _merge(rates, code, "cash", buy, sell, published)
+    seen_tab = False
+    for tab_id, kind in _IPOTEKA_TABS:
+        table = _ipoteka_table(page, tab_id)
+        if table is None:
+            continue
+        seen_tab = True
+        for row in re.findall(r"<tr[^>]*>(.*?)</tr>", table, re.S):
+            code = _IPOTEKA_CODE.search(row)
+            if not code:
+                continue
+            cells = [
+                html.unescape(re.sub(r"<[^>]+>", " ", c)).strip()
+                for c in re.findall(r"<td[^>]*>(.*?)</td>", row, re.S)
+            ]
+            cells = [re.sub(r"\s+", " ", c) for c in cells]
+            if len(cells) < 3:
+                continue
+            buy = _to_float(cells[1])
+            sell = _to_float(cells[2])
+            code = code.group(1).upper()
+            if tab_id != "all":
+                existing = rates.get(code, {}).get("mobile")
+                if existing and (existing.get("buy") or existing.get("sell")):
+                    continue
+            _merge(rates, code, kind, buy, sell, published)
+    if not seen_tab:
+        raise LayoutError("Ipoteka: currency tables not found")
     if not rates:
-        raise LayoutError(f"Ipoteka: no valid {code} rate")
+        raise LayoutError("Ipoteka: no rates parsed")
     return rates
 
 
-def _ipoteka_value(pattern: re.Pattern, page: str, code: str) -> Optional[float]:
-    for found_code, raw in pattern.findall(page):
-        if found_code.upper() == code:
-            value = _to_float(raw)
-            if value is not None:
-                return value
-    return None
+def _ipoteka_table(page: str, tab_id: str) -> Optional[str]:
+    """Return the inner HTML of the ``#<tab_id>`` currency panel."""
+    anchor = re.search(
+        rf"<div[^>]*\bid=\"{re.escape(tab_id)}\"[^>]*>", page, re.I
+    )
+    if not anchor:
+        return None
+    start = anchor.end()
+    nxt = re.search(r"<div[^>]*\bid=\"(?:all|atms|mobileApp)\"", page[start:], re.I)
+    end = start + nxt.start() if nxt else len(page)
+    return page[start:end]
+
+
+_IPOTEKA_CODE = re.compile(r"<span[^>]*>\s*([A-Za-z]{3})\s*</span>")
 
 
 # --------------------------------------------------------------------------- #
@@ -770,7 +797,7 @@ def parse_source(kind: str, text: str, section: str, checked_at: datetime) -> di
     if kind == "ipakyuli-nuxt":
         return parse_ipakyuli(text, checked_at)
     if kind == "ipoteka-html":
-        return parse_ipoteka(text, section, checked_at)
+        return parse_ipoteka(text, checked_at)
 
     payload = json.loads(text)
     if kind == "sqb-api":

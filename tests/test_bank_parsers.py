@@ -112,24 +112,56 @@ class IpakYuliTests(unittest.TestCase):
 
 
 class IpotekaTests(unittest.TestCase):
-    def test_usd_page(self):
-        rates = parse_ipoteka(fixture("ipoteka_usd.html"), "USD", NOW)
-        self.assertEqual(rates["USD"]["cash"]["buy"], 11915.0)
-        self.assertEqual(rates["USD"]["cash"]["sell"], 12030.0)
+    def setUp(self):
+        self.rates = parse_ipoteka(fixture("ipoteka_index.html"), NOW)
 
-    def test_eur_page(self):
-        rates = parse_ipoteka(fixture("ipoteka_eur.html"), "EUR", NOW)
-        self.assertEqual(rates["EUR"]["cash"]["buy"], 12650.0)
-        self.assertEqual(rates["EUR"]["cash"]["sell"], 13700.0)
+    def test_branch_cash_usd(self):
+        self.assertEqual(self.rates["USD"]["cash"]["buy"], 11915.0)
+        self.assertEqual(self.rates["USD"]["cash"]["sell"], 12030.0)
+
+    def test_branch_cash_all_published_currencies(self):
+        self.assertEqual(self.rates["EUR"]["cash"]["buy"], 12650.0)
+        self.assertEqual(self.rates["EUR"]["cash"]["sell"], 13700.0)
+        self.assertEqual(self.rates["GBP"]["cash"]["buy"], 13600.0)
+        self.assertEqual(self.rates["GBP"]["cash"]["sell"], 17000.0)
+
+    def test_app_rate_fills_mobile(self):
+        self.assertEqual(self.rates["USD"]["mobile"]["buy"], 11965.0)
+        self.assertEqual(self.rates["USD"]["mobile"]["sell"], 11985.0)
+        self.assertEqual(self.rates["EUR"]["mobile"]["buy"], 13125.0)
+
+    def test_unsupported_currencies_dropped(self):
+        self.assertNotIn("JPY", self.rates)
+        self.assertNotIn("CHF", self.rates)
+
+    def test_rub_not_published(self):
+        # The official index page publishes no RUB quote; the adapter must not
+        # fabricate one.
+        self.assertNotIn("RUB", self.rates)
 
     def test_published_timestamp(self):
-        rates = parse_ipoteka(fixture("ipoteka_usd.html"), "USD", NOW)
-        self.assertEqual(rates["USD"]["cash"]["published_at"],
-                         "2026-11-13T00:36:03+05:00")
+        self.assertEqual(self.rates["USD"]["cash"]["published_at"],
+                         "2026-11-13T02:10:00+05:00")
 
-    def test_missing_currency_raises(self):
+    def test_layout_change_raises(self):
         with self.assertRaises(LayoutError):
-            parse_ipoteka(fixture("ipoteka_usd.html"), "RUB", NOW)
+            parse_ipoteka("<html><body>no tables</body></html>", NOW)
+
+    def test_atm_fills_mobile_when_app_absent(self):
+        # Only USD is published on the app tab; KZT is not supported and must be
+        # dropped, so the ATM USD row fills mobile for a currency the app omits.
+        page = (
+            "<div id=\"all\"><table><tbody>"
+            "<tr><td><span>USD</span></td><td>11915</td><td>12030</td></tr>"
+            "</tbody></table></div>"
+            "<div id=\"atms\"><table><tbody>"
+            "<tr><td><span>USD</span></td><td>11700</td><td>12010</td></tr>"
+            "</tbody></table></div>"
+            "<div id=\"mobileApp\"><table><tbody></tbody></table></div>"
+        )
+        rates = parse_ipoteka(page, NOW)
+        self.assertEqual(rates["USD"]["cash"]["buy"], 11915.0)
+        self.assertEqual(rates["USD"]["mobile"]["buy"], 11700.0)
 
 
 class AgrobankTests(unittest.TestCase):

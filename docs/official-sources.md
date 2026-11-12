@@ -6,9 +6,10 @@ implementation read 11 of the 14 banks from `bank.uz`, a third-party
 aggregator. That is now forbidden: every bank is read from its own official
 domain or an authorised public API, or reported as **blocked**.
 
-All HTTP results below were captured on 2026-11-12 (Asia/Tashkent) with a
-plain `urllib`/`curl` request and a normal desktop User-Agent. No CAPTCHA or
-access-control control was bypassed. Rates are UZS per 1 unit unless noted.
+All HTTP results below were re-verified on 2026-11-12/13 (Asia/Tashkent) with a
+plain `urllib`/`curl` request and a normal desktop User-Agent, plus a headless
+Chromium render for the client-rendered pages. No CAPTCHA or access-control
+control was bypassed. Rates are UZS per 1 unit unless noted.
 
 ## Verification matrix
 
@@ -22,23 +23,30 @@ access-control control was bypassed. Rates are UZS per 1 unit unless noted.
 | 6 | Mikrokreditbank | `mkbank.uz/uz/services/open_data/rates/json/` | 200 | ✓ | ✓ | ✓ (sell only) | – | ✓ | ✓ | ✓ | VERIFIED |
 | 7 | Ipak Yo‘li Bank | `ipakyulibank.uz/physical/valyuta-ayirboshlash` | 200 | ✓ | ✓ | ✓ | – | ✓ | ✓ | ✓ | VERIFIED |
 | 8 | O‘zmilliybank (NBU) | `nbu.uz` | 000 | – | – | – | – | – | – | – | BLOCKED |
-| 9 | Ipoteka-bank | `ipotekabank.uz/services/currency/{usd,eur}-uzs/` | 200 | ✓ | ✓ | – | – | – | ✓ | – | PARTIAL |
+| 9 | Ipoteka-bank | `ipotekabank.uz/services/currency/` | 200 | ✓ | ✓ | – | – | ✓ | ✓ | ✓ | VERIFIED |
 | 10 | BRB | `brb.uz/api/currency/compare?type=jismoniy` | 200 | ✓ | ✓ | ✓ | – | ✓ | ✓ | ✓ | VERIFIED |
 | 11 | Agrobank | `agrobank.uz/api/v1/?action=pages&code=uz/person/exchange_rates` | 200 | ✓ | ✓ | ✓ (sell only) | – | ✓ | ✓ | ✓ | VERIFIED |
-| 12 | Hamkorbank | `api-dbo.hamkorbank.uz/webflow/v1/exchanges` | 503* | ✓ | ✓ | ✓ | – | ✓ | ✓ | ✓ | VERIFIED (intermittent) |
+| 12 | Hamkorbank | `api-dbo.hamkorbank.uz/webflow/v1/exchanges` | 500* | – | – | – | – | – | – | – | BLOCKED (upstream) |
 | 13 | Xalq banki | `xb.uz/api/v1/external/client/exchange-rate/last-thirty-day` | 200 | ✓ | ✓ | ✓ | – | – | ✓ | – | VERIFIED |
 | 14 | Kapitalbank | `kapitalbank.uz` | 403 | – | – | – | – | – | – | – | BLOCKED |
 
 `✓ (sell only)` means the bank genuinely does not publish a buying rate for that
 currency; the value is stored as `null`, not fabricated.
 
-\* The Hamkorbank endpoint is intermittently unavailable (it returned `200`
-during reconnaissance and `503` on later attempts). This is a documented
-upstream limitation, not a collector bug; the last verified rates are carried
-forward with their original timestamps.
+\* Hamkorbank's official endpoint is currently failing upstream: it returns
+HTTP `500` `{"status":"Failure","error_code":-10,"error_note":"internal
+error","data":null}` for every request (with and without browser headers, and
+from a browser fetch context). The `/uz/exchange-rate/` page itself still
+returns `200` but ships no server-rendered rates — its table is populated by
+that same failing call — so no official rate value is reachable right now. The
+bank is therefore treated as blocked upstream; the last verified rates are
+carried forward with their original timestamps rather than overwritten.
 
-No bank among the 14 publishes KZT on an official page that was reachable.
-KZT therefore stays `null` everywhere and the collector does not invent it.
+No bank among the 14 publishes a personal cash or mobile KZT rate on an
+official page that was reachable. SQB's public API does carry a KZT row, but
+only under its `juridic` (legal-entity) channel, which is out of scope; the
+personal `offline`/`online`/`atm` channels omit KZT. KZT therefore stays `null`
+everywhere and the collector does not invent it.
 
 ## Per-bank notes
 
@@ -57,12 +65,13 @@ Server-rendered HTML with two tables, headed *Bank ofislarida valyutalar kursi*
 RUB is not published (all-zero rows are dropped).
 
 ### Asakabank — BLOCKED
-`asakabank.uz` is a Nuxt SPA whose rate table is fetched at runtime from
-`back.asakabank.uz` using authenticated-style `/…/v1/` endpoints. No public
-rate endpoint was found: the page HTML (and `_payload.json`) contains no rates,
-and every candidate path on the API host returned `404`. The remaining
-published URL, `/uz/press-center/exchange-rates/`, was not reachable from the
-collector network. The bank is recorded as blocked with this reason.
+`asakabank.uz` is a Nuxt SPA. The rate table on
+`/uz/press-center/exchange-rates` is rendered client-side; the served HTML
+contains no rates (only CSS/markup). Reverse-engineering the Nuxt config gives
+`apiBase = https://back.asakabank.uz`, but that host answers HTTP 403 to every
+path from the collector network (`/`, `/rates`, `/exchange-rates`, `/v1/rates`,
+`/openapi.json`), and no public rate route is documented. The bank is recorded
+as blocked with this reason; no third-party aggregator is substituted.
 
 ### Trastbank — `/uz/services/exchange-rates/`
 Server-rendered table `Valyuta | Sotib olish | Sotish | MB kursi`, plus a stamp
@@ -73,7 +82,9 @@ reference rate and is ignored.
 JSON `{data: {offline, online, atm, juridic}}`. `offline` rows are branch cash
 and are integers **scaled by 100** (`1193000` → `11930.00`); `online` and `atm`
 rows are already in UZS. `online` (app) fills `mobile`; `atm` fills `mobile`
-only when the app rate is absent. `juridic` (legal-entity) rows are ignored.
+only when the app rate is absent. `juridic` (legal-entity) rows are ignored;
+they are the only rows that carry KZT, so SQB contributes no KZT to the
+personal-channel dataset.
 
 ### Mikrokreditbank — `/uz/services/open_data/rates/json/`
 Published open-data feed of G1..G5 fields. `G1` is the stamp
@@ -89,17 +100,23 @@ Nuxt page with an inline `__NUXT_DATA__` graph holding three tabs: `Ilovada`
 the ATM rate fills `mobile` only when the app does not publish that currency.
 
 ### O‘zmilliybank (NBU) — BLOCKED
-`nbu.uz` resolves to `185.104.210.5` but refuses every connection on ports 80
-and 443 from the collector network (`000`). Alternative hosts
-(`www.nbu.uz`, `api.nbu.uz`, `bank.nbu.uz`, `uzmilliybank.uz`) either share the
-same host or do not resolve. Recorded as blocked.
+`nbu.uz` resolves to `185.104.210.5` (`www.nbu.uz` shares it). The host accepts
+no TCP connection on port 80 or 443 from the collector network: both a
+`urllib` request and a raw `socket`/TLS handshake time out (`000`). Alternative
+hosts (`api.nbu.uz`, `open.nbu.uz`, `online.nbu.uz`, `my.nbu.uz`) do not
+resolve; `mobile.nbu.uz` resolves but returns HTTP 403. Recorded as blocked.
 
-### Ipoteka-bank — `/services/currency/{usd,eur}-uzs/`
-One page per currency pair. The branch rate is published as
-`Sotib olish kursi: 1 USD = 11915 UZS` and `Sotish kursi: 1 USD = 12030 UZS`,
-with a stamp `Обновлено DD.MM.YYYY HH:MM:SS`. Only USD and EUR pages exist
-(`rub-uzs` returns `404`), so the bank is PARTIAL: it genuinely does not publish
-RUB, GBP or KZT.
+### Ipoteka-bank — `/services/currency/`
+One official index page publishes every currency across three tabs:
+`Filialda` (branch cash, `#all`), `Bankomatda` (ATM, `#atms`) and `Ilovada`
+(app, `#mobileApp`). Each panel is a `Valyuta | Xarid | Sotish | MB kursi`
+table; `Xarid` is the bank's buying price, `Sotish` the selling price and
+`MB kursi` the CBU reference value, which is ignored. The stamp is an ISO
+`<time datetime="...">` (Asia/Tashkent). The app rate fills `mobile`; the ATM
+rate fills `mobile` only for a currency the app does not publish. This replaces
+the previous per-currency pages (`/usd-uzs/`, `/eur-uzs/`) and now also yields
+GBP plus the mobile channel in a single request. The bank publishes no RUB
+quote here, so RUB stays `null` rather than being fabricated.
 
 ### BRB — `GET /api/currency/compare?type=jismoniy`
 JSON `{data: [...]}`; values are integers **scaled by 100**. The `MOBIL …` rows
@@ -118,7 +135,10 @@ JSON `{data: [...]}`; values are integers **scaled by 100**.
 `destination_code` `2` is branch cash and `7` is the mobile app. Among cash rows
 the `begin_sum_i == 0` row is the standard rate (rows with `begin_sum_i > 0` are
 a "up to 10,000" tier and are ignored when the standard row is present).
-`created_at` is the stamp.
+`created_at` is the stamp. The endpoint is the one the bank's own
+`/uz/exchange-rate/` page calls; it is currently failing upstream (see above),
+so this parser is retained but the bank's live status is blocked until the
+endpoint recovers.
 
 ### Xalq banki — `GET /api/v1/external/client/exchange-rate/last-thirty-day`
 JSON keyed by ISO 4217 **numeric** code; each holds a `data` map of
@@ -126,9 +146,10 @@ JSON keyed by ISO 4217 **numeric** code; each holds a `data` map of
 becomes `published_at`.
 
 ### Kapitalbank — BLOCKED
-`kapitalbank.uz` is behind a Cloudflare anti-bot challenge (HTTP 403,
-"Just a moment…"). Bypassing it would violate the source policy, so the bank is
-recorded as blocked. No alternative official API host resolved.
+`kapitalbank.uz` answers HTTP 403 with a Cloudflare anti-bot challenge
+("Just a moment…"). `kapital24.uz` redirects (301) to `kapitalbank.uz`, and no
+public rate API host resolves. Bypassing the challenge would violate the source
+policy, so the bank is recorded as blocked with this reason.
 
 ## Channel model
 

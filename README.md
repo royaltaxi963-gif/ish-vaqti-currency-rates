@@ -18,22 +18,27 @@ guarantee.
 
 ## Supported banks (14, in output order)
 
-| # | Bank | Verified source |
-| --- | --- | --- |
-| 1 | Universalbank | bank.uz |
-| 2 | Davr Bank | davrbank.uz (cash + mobile) |
-| 3 | Asakabank | bank.uz |
-| 4 | Trastbank | bank.uz |
-| 5 | SQB | sqb.uz API (cash + mobile) |
-| 6 | Mikrokreditbank | bank.uz |
-| 7 | Ipak Yo‘li Bank | bank.uz |
-| 8 | O‘zmilliybank | bank.uz |
-| 9 | Ipoteka-bank | bank.uz |
-| 10 | Biznesni rivojlantirish banki (BRB) | brb.uz API (cash + mobile) |
-| 11 | Agrobank | bank.uz |
-| 12 | Hamkorbank | bank.uz |
-| 13 | Xalq banki | bank.uz |
-| 14 | Kapitalbank | bank.uz |
+| # | Bank | Official source | Status |
+| --- | --- | --- | --- |
+| 1 | Universalbank | `universalbank.uz` API (cash) | VERIFIED |
+| 2 | Davr Bank | `davrbank.uz` (cash + mobile) | VERIFIED |
+| 3 | Asakabank | `asakabank.uz` (client-side, no public API) | BLOCKED |
+| 4 | Trastbank | `trastbank.uz` (cash) | VERIFIED |
+| 5 | SQB | `sqb.uz` API (cash + mobile) | VERIFIED |
+| 6 | Mikrokreditbank | `mkbank.uz` open-data feed (cash + mobile) | VERIFIED |
+| 7 | Ipak Yo‘li Bank | `ipakyulibank.uz` (cash + mobile) | VERIFIED |
+| 8 | O‘zmilliybank | `nbu.uz` (unreachable) | BLOCKED |
+| 9 | Ipoteka-bank | `ipotekabank.uz` (cash + mobile) | VERIFIED |
+| 10 | Biznesni rivojlantirish banki (BRB) | `brb.uz` API (cash + mobile) | VERIFIED |
+| 11 | Agrobank | `agrobank.uz` API (cash + mobile) | VERIFIED |
+| 12 | Hamkorbank | `hamkorbank.uz` API (upstream HTTP 500) | BLOCKED |
+| 13 | Xalq banki | `xb.uz` API (cash) | VERIFIED |
+| 14 | Kapitalbank | `kapitalbank.uz` (Cloudflare 403) | BLOCKED |
+
+Every bank is read from its own official domain or an authorised public API.
+See `docs/official-sources.md` for the per-bank verification record. A bank
+whose official source cannot be reached is reported as `unavailable`/blocked
+with an explicit reason — never via a third-party aggregator.
 
 Rates are genuinely published by each bank. `null` means the bank does not
 publish that rate — it is never fabricated. Currencies and rate types a bank
@@ -116,9 +121,13 @@ python -m scripts.check_endpoints                # probe the public endpoints
 
 ## Limitations
 
-* bank.uz exposes a single cash/card rate per currency and does not split cash
-  from mobile, so those banks report `cash` only. SQB, BRB and Davr publish a
-  distinct mobile rate and report both.
-* KZT is published by only some banks; GBP and RUB are not offered by all.
+* Not every bank publishes a distinct mobile rate; banks that publish cash only
+  report `cash`. SQB, BRB, Davr, Ipak Yo‘li, Mikrokreditbank, Agrobank,
+  Hamkorbank and Ipoteka-bank publish a mobile/app (or ATM) rate as well.
+* KZT is not offered on the personal cash/mobile channels of any reachable
+  official source, so it stays `null`; GBP and RUB are not offered by all banks.
+* Four banks are currently blocked and reported as `unavailable` with a reason
+  (Asakabank, O‘zmilliybank, Hamkorbank, Kapitalbank); see
+  `docs/official-sources.md`.
 * GitHub Actions scheduled runs are best-effort and may be delayed.
 

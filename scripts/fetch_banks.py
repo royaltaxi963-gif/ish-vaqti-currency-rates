@@ -230,6 +230,16 @@ def build_dataset(now: datetime, previous: dict | None = None, fetch_workers: in
             verified += 1
         entry["stale"] = _bank_stale(entry["currencies"], now)
         entry.setdefault("carried_forward", False)
+        # Emit a stable key order so a refresh only changes values, not layout.
+        entry = {
+            "name": entry["name"],
+            "status": entry["status"],
+            "reason": entry.get("reason"),
+            "sources": entry["sources"],
+            "currencies": entry["currencies"],
+            "carried_forward": bool(entry["carried_forward"]),
+            "stale": entry["stale"],
+        }
         banks.append({"slug": bank.slug, **entry})
 
     return {

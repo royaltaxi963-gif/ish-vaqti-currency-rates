@@ -15,13 +15,15 @@ from scripts.fetch_banks import collect_bank
 
 LIVE = os.environ.get("ISH_VAQTI_LIVE") == "1"
 
-# Banks that must always answer. Hamkorbank is excluded because its endpoint is
-# documented as intermittently unavailable (HTTP 503).
+# Banks whose official source is reachable and must return rates. Hamkorbank is
+# excluded because its official endpoint is currently failing upstream (HTTP
+# 500, `{"status":"Failure","error_code":-10}`), so it is expected to be
+# blocked rather than up.
 EXPECTED_UP = {
     "universalbank", "davr-bank", "trastbank", "sqb", "mikrokreditbank",
     "ipakyulibank", "ipoteka-bank", "brb", "agrobank", "xalq-bank",
 }
-BLOCKED = {"asaka-bank", "nbu", "kapitalbank"}
+BLOCKED = {"asaka-bank", "nbu", "kapitalbank", "hamkorbank"}
 
 
 @unittest.skipUnless(LIVE, "set ISH_VAQTI_LIVE=1 to run live source checks")
