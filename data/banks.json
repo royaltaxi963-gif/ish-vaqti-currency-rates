@@ -1,8 +1,8 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-11-12T17:01:14+00:00",
+  "generated_at": "2026-11-12T17:02:30+00:00",
   "max_age_hours": 24,
-  "stale_after": "2026-11-13T17:01:14+00:00",
+  "stale_after": "2026-11-13T17:02:30+00:00",
   "supported_currencies": [
     "USD",
     "EUR",
@@ -484,33 +484,33 @@
           "cash": {
             "buy": 11945.0,
             "sell": 12030.0,
-            "published_at": "2026-11-12T22:01:03+05:00"
+            "published_at": "2026-11-12T22:02:03+05:00"
           },
           "mobile": {
             "buy": 11945.0,
             "sell": 12010.0,
-            "published_at": "2026-11-12T22:01:03+05:00"
+            "published_at": "2026-11-12T22:02:03+05:00"
           }
         },
         "EUR": {
           "cash": {
             "buy": 12900.0,
             "sell": 13600.0,
-            "published_at": "2026-11-12T22:01:03+05:00"
+            "published_at": "2026-11-12T22:02:03+05:00"
           }
         },
         "RUB": {
           "cash": {
             "buy": 50.0,
             "sell": 146.0,
-            "published_at": "2026-11-12T22:01:03+05:00"
+            "published_at": "2026-11-12T22:02:03+05:00"
           }
         },
         "GBP": {
           "cash": {
             "buy": 15500.0,
             "sell": 16200.0,
-            "published_at": "2026-11-12T22:01:03+05:00"
+            "published_at": "2026-11-12T22:02:03+05:00"
           }
         }
       },
