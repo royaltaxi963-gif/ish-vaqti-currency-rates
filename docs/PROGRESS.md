@@ -30,6 +30,15 @@ Last verified: 2026-11-12 (Asia/Tashkent evening), live collection of all 14 ban
 * `python -m scripts.validate_data` → `OK: 14/14 banks with rates`.
 * `python -m scripts.build_site` → `_site/` bundle; rendered in a browser, all
   14 banks in order.
+* GitHub Actions run `43263517312` (branch `feat/bank-rates-14-banks`)
+  succeeded: unit tests, live source checks (`live: 14/14 banks returned
+  rates`), CBU fetch, bank fetch, validation, data commit and site build. The
+  deploy job warns and skips when Pages cannot be enabled.
+* The run committed `data/banks.json` with `banks_with_rates: 14` (commit
+  `5a7d56a`, then `3c814b6`).
+* Fallback endpoints confirmed serving the CI dataset:
+  `raw.githubusercontent.com` and `cdn.jsdelivr.net` (both 200, 14 banks).
+  GitHub Pages returns 404 until Pages is enabled on `main`.
 
 ## Open items
 
