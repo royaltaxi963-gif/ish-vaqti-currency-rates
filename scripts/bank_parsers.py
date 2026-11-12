@@ -305,6 +305,39 @@ def _davr_published(page: str, checked_at: datetime) -> Optional[str]:
     return moment.isoformat()
 
 
+def parse_mkbank_json(payload: object) -> dict:
+    """Parse MKBank's published open-data G1..G5 fields.
+
+    G2=BANK is branch cash, APP is mobile; G3=currency,
+    G4=buy, G5=sell. Missing or zero values are not invented.
+    """
+    rows = payload
+    if isinstance(rows, dict):
+        for key in ("data", "results", "items"):
+            if isinstance(rows.get(key), list):
+                rows = rows[key]
+                break
+    if not isinstance(rows, list):
+        raise LayoutError("MKBank: expected open-data rows")
+    rates = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        fields = {str(k).upper(): v for k, v in row.items()}
+        code = str(fields.get("G3") or "").upper().strip()
+        group = str(fields.get("G2") or "").upper().strip()
+        if code not in SUPPORTED_CURRENCIES or group not in ("BANK", "APP"):
+            continue
+        kind = "cash" if group == "BANK" else "mobile"
+        raw_stamp = str(fields.get("G1") or "")
+        published = _normalise_timestamp(raw_stamp)
+        _merge(rates, code, kind, _to_float(fields.get("G4")),
+               _to_float(fields.get("G5")), published)
+    if not rates:
+        raise LayoutError("MKBank: no supported rates in open data")
+    return rates
+
+
 def parse_source(kind: str, text: str, section: str, checked_at: datetime) -> dict:
     """Dispatch to the right parser for a source ``kind``."""
     if kind == "bankuz":
@@ -316,4 +349,6 @@ def parse_source(kind: str, text: str, section: str, checked_at: datetime) -> di
         return parse_sqb(payload)
     if kind == "brb-api":
         return parse_brb(payload)
+    if kind == "mkbank-json":
+        return parse_mkbank_json(payload)
     raise LayoutError(f"unknown source kind: {kind}")
