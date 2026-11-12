@@ -11,6 +11,7 @@ from pathlib import Path
 from scripts.bank_parsers import (
     LayoutError,
     parse_agrobank,
+    parse_bankuz,
     parse_brb,
     parse_davr,
     parse_hamkorbank,
@@ -335,6 +336,64 @@ class DavrTests(unittest.TestCase):
             parse_davr("<html>nothing</html>", ("Bank ofislarida valyutalar kursi",), NOW)
 
 
+class BankuzFallbackTests(unittest.TestCase):
+    """bank.uz fallback parser: units, buy/sell direction, timestamps, drift."""
+
+    def test_asakabank_cash_rates_and_zero_buy_dropped(self):
+        rates = parse_bankuz(fixture("bankuz_asaka-bank.html"), NOW)
+        self.assertEqual(rates["USD"]["cash"]["buy"], 11950.0)
+        self.assertEqual(rates["USD"]["cash"]["sell"], 11990.0)
+        # bank.uz publishes a 0 buying cell for RUB here: not offered, so null.
+        self.assertIsNone(rates["RUB"]["cash"]["buy"])
+        self.assertEqual(rates["RUB"]["cash"]["sell"], 145.0)
+
+    def test_nbu_publishes_rub_and_kzt(self):
+        rates = parse_bankuz(fixture("bankuz_nbu.html"), NOW)
+        self.assertEqual(rates["RUB"]["cash"]["buy"], 115.0)
+        self.assertEqual(rates["RUB"]["cash"]["sell"], 150.0)
+        self.assertEqual(rates["KZT"]["cash"]["buy"], 16.0)
+        self.assertEqual(rates["KZT"]["cash"]["sell"], 27.0)
+
+    def test_kapitalbank_kzt_collected(self):
+        rates = parse_bankuz(fixture("bankuz_kapitalbank.html"), NOW)
+        self.assertEqual(rates["KZT"]["cash"]["buy"], 25.0)
+        self.assertEqual(rates["KZT"]["cash"]["sell"], 28.0)
+
+    def test_buy_is_not_greater_than_sell(self):
+        for name in ("bankuz_asaka-bank.html", "bankuz_nbu.html",
+                     "bankuz_hamkorbank.html", "bankuz_kapitalbank.html"):
+            rates = parse_bankuz(fixture(name), NOW)
+            for code, kinds in rates.items():
+                buy = kinds["cash"]["buy"]
+                sell = kinds["cash"]["sell"]
+                if buy is not None and sell is not None:
+                    self.assertLess(buy, sell, f"{name} {code}: buy>=sell")
+
+    def test_published_timestamp_parsed(self):
+        rates = parse_bankuz(fixture("bankuz_asaka-bank.html"), NOW)
+        self.assertEqual(rates["USD"]["cash"]["published_at"], "2026-11-12T16:56:00+05:00")
+
+    def test_wrong_unit_is_dropped(self):
+        # A row quoted per 10 units must not be published as a per-1 rate.
+        page = fixture("bankuz_asaka-bank.html").replace(
+            'Birlik</span><span class="medium-text"> 1 </span>',
+            'Birlik</span><span class="medium-text"> 10 </span>',
+            1,
+        )
+        rates = parse_bankuz(page, NOW)
+        # The first row (EUR) is quoted per 10 and is dropped; the per-1 rows stay.
+        self.assertNotIn("EUR", rates)
+        self.assertIn("USD", rates)
+
+    def test_layout_change_raises(self):
+        with self.assertRaises(LayoutError):
+            parse_bankuz("<html><body>changed</body></html>", NOW)
+
+    def test_empty_table_raises(self):
+        with self.assertRaises(LayoutError):
+            parse_bankuz('<div class="table-kurs"></div>', NOW)
+
+
 class DispatchTests(unittest.TestCase):
     def test_json_sources_dispatch(self):
         rates = parse_source("brb-api", fixture("brb_api.json"), "", NOW)
@@ -342,6 +401,10 @@ class DispatchTests(unittest.TestCase):
 
     def test_html_sources_dispatch(self):
         rates = parse_source("trastbank-html", fixture("trastbank.html"), "", NOW)
+        self.assertIn("USD", rates)
+
+    def test_bankuz_dispatch(self):
+        rates = parse_source("bankuz-html", fixture("bankuz_nbu.html"), "", NOW)
         self.assertIn("USD", rates)
 
     def test_unknown_kind_raises(self):

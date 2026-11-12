@@ -48,13 +48,17 @@ def validate_banks(path: Path = BANKS_FILE) -> dict:
         slug = bank.get("slug")
         if bank.get("status") not in ("verified", "partial", "stale", "unavailable"):
             _fail(f"{slug}: unknown status {bank.get('status')!r}")
+        if bank.get("selected_source") not in (None, "official", "fallback"):
+            _fail(f"{slug}: unknown selected_source {bank.get('selected_source')!r}")
         if not bank.get("sources"):
-            # A blocked bank has no official source; it must say why.
+            # A bank with no reachable source must say why it is empty.
             if bank.get("status") != "unavailable" or not bank.get("reason"):
                 _fail(f"{slug}: no sources recorded and no reason given")
         for source in bank["sources"]:
             if not source.get("url", "").startswith("https://"):
                 _fail(f"{slug}: source url must be https")
+            if source.get("source_type") not in (None, "official", "fallback"):
+                _fail(f"{slug}: unknown source_type {source.get('source_type')!r}")
         for code, kinds in bank.get("currencies", {}).items():
             if code not in SUPPORTED_CURRENCIES:
                 _fail(f"{slug}: unsupported currency {code}")

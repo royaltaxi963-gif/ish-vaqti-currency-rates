@@ -25,7 +25,7 @@ from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-from .banks import BANKS, SUPPORTED_CURRENCIES, Bank
+from .banks import BANKS, SUPPORTED_CURRENCIES, Bank, Source
 from .bank_parsers import LayoutError, parse_source
 
 SCHEMA_VERSION = 2
@@ -62,52 +62,152 @@ def _fetch(url: str, attempts: int = RETRIES) -> str:
     raise CollectionError(f"{url}: {last}")
 
 
-def collect_bank(bank: Bank, checked_at: datetime) -> dict:
-    """Collect every source of a single bank and merge the results."""
-    if not bank.sources:
-        return {
-            "name": bank.name,
-            "status": "unavailable",
-            "reason": bank.unavailable_reason or "no verified source",
-            "sources": [],
-            "currencies": {},
-        }
+def _source_entries(bank: Bank, source: Source, checked_at: datetime,
+                    cache: dict[str, str]) -> tuple[dict, list[dict]]:
+    """Fetch, identity-check and parse one source (all of its sections).
 
-    merged: dict = {}
-    sources: list[dict] = []
-    errors: list[str] = []
+    Returns the parsed ``{code: {kind: payload}}`` map and the per-section
+    provenance entries. A section that fails is recorded with an ``error``
+    status; an identity mismatch fails the whole source because a page that does
+    not name the bank must never contribute rates.
+    """
+    entries: list[dict] = []
+    text = cache.get(source.url)
+    if text is None:
+        text = _fetch(source.url)
+        cache[source.url] = text
+
+    if source.expect:
+        haystack = text.casefold()
+        missing = [token for token in source.expect if token.casefold() not in haystack]
+        if missing:
+            for section in source.sections or ("",):
+                entries.append({
+                    "kind": source.kind,
+                    "url": source.url,
+                    "rate_type": source.kind_label,
+                    "source_type": source.source_type,
+                    "status": "error",
+                    "error": f"identity check failed: {source.url} does not name {missing}",
+                })
+            return {}, entries
+
+    parsed: dict = {}
+    for section in source.sections or ("",):
+        entry = {
+            "kind": source.kind,
+            "url": source.url,
+            "rate_type": source.kind_label,
+            "source_type": source.source_type,
+        }
+        try:
+            result = parse_source(source.kind, text, section, checked_at)
+        except (LayoutError, ValueError) as error:
+            entry["status"] = "error"
+            entry["error"] = f"{source.url}#{section or '-'}: {error}"
+        else:
+            entry["status"] = "ok"
+            for code, kinds in result.items():
+                for rate_kind, payload in kinds.items():
+                    parsed.setdefault(code, {})[rate_kind] = payload
+        entries.append(entry)
+    return parsed, entries
+
+
+def collect_bank(bank: Bank, checked_at: datetime) -> dict:
+    """Collect a bank, preferring its official source and falling back if needed.
+
+    The official source is always attempted first. A fallback (an approved
+    third-party aggregator) is consulted only when the official source yields no
+    usable rates, and its provenance is recorded distinctly. Official and
+    fallback values are never merged into one dataset entry: a single rate pair
+    always comes from a single source.
+    """
     cache: dict[str, str] = {}
 
+    official_rates: dict = {}
+    official_sources: list[dict] = []
+    errors: list[str] = []
+
     for source in bank.sources:
-        sections = source.sections or ("",)
-        for section in sections:
-            entry = {"kind": source.kind, "url": source.url, "rate_type": source.kind_label}
-            try:
-                # An identical URL is fetched only once per collection cycle,
-                # even when several sections or rate kinds share it.
-                if source.url not in cache:
-                    cache[source.url] = _fetch(source.url)
-                parsed = parse_source(source.kind, cache[source.url], section, checked_at)
-            except (CollectionError, LayoutError, ValueError) as error:
-                entry["status"] = "error"
-                entry["error"] = str(error)
-                errors.append(f"{source.url}#{section or '-'}: {error}")
-            else:
-                entry["status"] = "ok"
-                for code, kinds in parsed.items():
-                    for rate_kind, payload in kinds.items():
-                        merged.setdefault(code, {})[rate_kind] = payload
-            sources.append(entry)
+        try:
+            parsed, entries = _source_entries(bank, source, checked_at, cache)
+        except (CollectionError, OSError) as error:
+            entries = [{
+                "kind": source.kind,
+                "url": source.url,
+                "rate_type": source.kind_label,
+                "source_type": source.source_type,
+                "status": "error",
+                "error": str(error),
+            }]
+            parsed = {}
+        official_sources.extend(entries)
+        for entry in entries:
+            if entry["status"] == "error":
+                errors.append(entry.get("error", "source error"))
+        for code, kinds in parsed.items():
+            for rate_kind, payload in kinds.items():
+                official_rates.setdefault(code, {})[rate_kind] = payload
 
-    if not merged:
-        return {
-            "name": bank.name,
-            "status": "unavailable",
-            "reason": "; ".join(errors) or "no rates published",
-            "sources": sources,
-            "currencies": {},
-        }
+    if official_rates:
+        return _finalise_entry(bank, official_rates, official_sources, errors, "official")
 
+    # No official data. Try the verified fallback, if the bank has one.
+    fallback_sources: list[dict] = []
+    fallback_rates: dict = {}
+    fallback_errors: list[str] = []
+    if bank.fallback is not None:
+        try:
+            parsed, entries = _source_entries(bank, bank.fallback, checked_at, cache)
+        except (CollectionError, OSError) as error:
+            entries = [{
+                "kind": bank.fallback.kind,
+                "url": bank.fallback.url,
+                "rate_type": bank.fallback.kind_label,
+                "source_type": bank.fallback.source_type,
+                "status": "error",
+                "error": str(error),
+            }]
+            parsed = {}
+        fallback_sources.extend(entries)
+        for entry in entries:
+            if entry["status"] == "error":
+                fallback_errors.append(entry.get("error", "fallback error"))
+        fallback_rates = parsed
+
+    if fallback_rates:
+        if errors:
+            detail = "; ".join(errors)
+        elif bank.unavailable_reason:
+            detail = bank.unavailable_reason
+        else:
+            detail = "no rates"
+        reason = f"official source unavailable: {detail}"
+        return _finalise_entry(
+            bank, fallback_rates, fallback_sources, fallback_errors, "fallback",
+            official_note=reason,
+        )
+
+    return {
+        "name": bank.name,
+        "status": "unavailable",
+        "reason": _unavailable_reason(bank, errors, fallback_errors),
+        "sources": official_sources + fallback_sources,
+        "currencies": {},
+        "selected_source": None,
+    }
+
+
+def _unavailable_reason(bank: Bank, official_errors: list[str], fallback_errors: list[str]) -> str:
+    reason = bank.unavailable_reason or "; ".join(official_errors) or "no rates published"
+    if fallback_errors:
+        reason = f"{reason}; fallback also failed: {'; '.join(fallback_errors)}"
+    return reason
+
+
+def _finalise_entry(bank: Bank, merged: dict, sources: list[dict], errors: list[str],
+                    selected: str, official_note: str | None = None) -> dict:
     currencies = {}
     for code in SUPPORTED_CURRENCIES:
         kinds = merged.get(code)
@@ -118,28 +218,54 @@ def collect_bank(bank: Bank, checked_at: datetime) -> dict:
         }
 
     partial = any(source.get("status") == "error" for source in sources)
+
+    reason = None
+    if selected == "fallback":
+        note = official_note or "official source unavailable"
+        if bank.fallback is not None and bank.fallback.kind == "bankuz-html":
+            from .banks import BANKUZ_ATTRIBUTION
+            reason = f"{note}. {BANKUZ_ATTRIBUTION}"
+        else:
+            reason = note
+    elif partial:
+        reason = "; ".join(errors)
+
     return {
         "name": bank.name,
         "status": "partial" if partial else "verified",
-        "reason": "; ".join(errors) if partial else None,
+        "reason": reason,
         "sources": sources,
         "currencies": currencies,
+        "selected_source": selected,
     }
 
 
+def _source_keys(bank: Bank) -> set[tuple[str, str]]:
+    """The set of (kind, url) this bank could legitimately collect from.
+
+    Includes the fallback so that rates carried forward from a fallback are only
+    reused while that fallback is still an approved source for the bank.
+    """
+    keys = {(source.kind, source.url) for source in bank.sources}
+    if bank.fallback is not None:
+        keys.add((bank.fallback.kind, bank.fallback.url))
+    return keys
+
+
 def _same_sources(bank: Bank, old: dict) -> bool:
-    """True when the previous dataset used the same official sources.
+    """True when the previous dataset used the same (or a subset of) sources.
 
     Carrying rates forward across a source change would publish values that a
-    different upstream produced, so a changed (or unrecorded) source set disables
-    carry-forward for that bank.
+    different upstream produced, so a previous source set that is not a subset of
+    the bank's current approved sources disables carry-forward for that bank.
     """
     recorded = old.get("sources")
-    if not isinstance(recorded, list):
+    if not isinstance(recorded, list) or not recorded:
         return False
     previous = {(s.get("kind"), s.get("url")) for s in recorded if isinstance(s, dict)}
-    current = {(s.kind, s.url) for s in bank.sources}
-    return bool(current) and previous == current
+    if not previous:
+        return False
+    return previous <= _source_keys(bank)
 
 
 def _merge_with_previous(bank: Bank, entry: dict, previous: dict | None) -> dict:
@@ -147,11 +273,11 @@ def _merge_with_previous(bank: Bank, entry: dict, previous: dict | None) -> dict
 
     A bank that fails to refresh keeps its last verified rates instead of being
     overwritten with an empty set, so consumers never lose data on a bad run.
-    A bank with no configured source is deliberately unavailable (for example a
-    blocked official site), so it must never inherit rates collected earlier
-    from a different, since-removed source.
+    Rates are only reused while the previous source is still an approved source
+    for the bank (official or its verified fallback), so a value produced by a
+    since-removed source is never republished.
     """
-    if previous is None or not bank.sources:
+    if previous is None:
         return entry
     old = next((b for b in previous.get("banks", []) if b.get("slug") == bank.slug), None)
     if not old or not old.get("currencies") or not _same_sources(bank, old):
@@ -168,11 +294,15 @@ def _merge_with_previous(bank: Bank, entry: dict, previous: dict | None) -> dict
     if not entry["currencies"]:
         entry["status"] = "stale"
         entry["reason"] = entry.get("reason") or "refresh failed; serving last verified rates"
+        # The served rates came from whatever source produced the previous
+        # dataset; keep that provenance instead of reporting no source.
+        entry["selected_source"] = old.get("selected_source")
     elif carried:
         entry["status"] = "partial"
         entry["reason"] = entry.get("reason") or "some rates carried forward from the last verified dataset"
     entry["currencies"] = merged
     entry["carried_forward"] = carried
+    entry.setdefault("selected_source", None)
     return entry
 
 
@@ -230,11 +360,13 @@ def build_dataset(now: datetime, previous: dict | None = None, fetch_workers: in
             verified += 1
         entry["stale"] = _bank_stale(entry["currencies"], now)
         entry.setdefault("carried_forward", False)
+        entry.setdefault("selected_source", None)
         # Emit a stable key order so a refresh only changes values, not layout.
         entry = {
             "name": entry["name"],
             "status": entry["status"],
             "reason": entry.get("reason"),
+            "selected_source": entry["selected_source"],
             "sources": entry["sources"],
             "currencies": entry["currencies"],
             "carried_forward": bool(entry["carried_forward"]),
@@ -272,6 +404,9 @@ def validate_dataset(data: dict) -> None:
     with_rates = [bank for bank in banks if bank.get("currencies")]
     if not with_rates:
         raise ValueError("refusing to publish a dataset with no rates")
+    for bank in banks:
+        if bank.get("selected_source") not in (None, "official", "fallback"):
+            raise ValueError(f"{bank['slug']}: bad selected_source {bank['selected_source']}")
     for bank in with_rates:
         for code, kinds in bank["currencies"].items():
             if code not in SUPPORTED_CURRENCIES:

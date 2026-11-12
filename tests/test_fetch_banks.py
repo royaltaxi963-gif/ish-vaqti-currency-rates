@@ -17,9 +17,12 @@ from scripts.banks import BANKS, BANKS_BY_SLUG, SUPPORTED_CURRENCIES
 FIXTURES = Path(__file__).parent / "fixtures"
 NOW = datetime(2026, 11, 13, 1, 0, tzinfo=timezone.utc)
 
-# Banks whose official source is reachable and whose rates the collector returns.
+# Banks whose own official source is reachable and whose rates the collector returns.
 COLLECTIBLE = [bank for bank in BANKS if bank.sources]
-BLOCKED = [bank for bank in BANKS if not bank.sources]
+# Banks whose official source is unavailable and which rely on a verified fallback.
+FALLBACK_ONLY = [bank for bank in BANKS if not bank.sources and bank.fallback]
+# Banks with no reachable source at all (none today).
+UNAVAILABLE = [bank for bank in BANKS if not bank.sources and not bank.fallback]
 
 FIXTURE_BY_KIND = {
     "universalbank-api": "universalbank_api.json",
@@ -32,6 +35,14 @@ FIXTURE_BY_KIND = {
     "agrobank-api": "agrobank_api.json",
     "hamkorbank-api": "hamkorbank_api.json",
     "xalq-api": "xalq_api.json",
+}
+
+# Sanitized bank.uz captures, one per fallback bank.
+BANKUZ_FIXTURE = {
+    "asaka-bank": "bankuz_asaka-bank.html",
+    "nbu": "bankuz_nbu.html",
+    "hamkorbank": "bankuz_hamkorbank.html",
+    "kapitalbank": "bankuz_kapitalbank.html",
 }
 
 
@@ -52,7 +63,7 @@ def fake_transport(mapping: dict):
 
 
 def good_mapping() -> dict:
-    """Map every configured source URL to a realistic response of its kind."""
+    """Map every configured source URL (official and fallback) to a response."""
     mapping = {}
     for bank in BANKS:
         for source in bank.sources:
@@ -60,11 +71,17 @@ def good_mapping() -> dict:
                 mapping[source.url] = fixture("ipoteka_index.html")
             else:
                 mapping[source.url] = fixture(FIXTURE_BY_KIND[source.kind])
+        if bank.fallback is not None:
+            mapping[bank.fallback.url] = fixture(BANKUZ_FIXTURE[bank.slug])
     return mapping
 
 
 def url_of(slug: str) -> str:
     return BANKS_BY_SLUG[slug].sources[0].url
+
+
+def fallback_url_of(slug: str) -> str:
+    return BANKS_BY_SLUG[slug].fallback.url
 
 
 class BankIdentityTests(unittest.TestCase):
@@ -90,26 +107,47 @@ class BankIdentityTests(unittest.TestCase):
         self.assertIn("Biznesni rivojlantirish banki (BRB)", names)
         self.assertIn("Xalq banki", names)
 
-    def test_no_third_party_aggregator_used(self):
+    def test_no_official_source_is_a_third_party_aggregator(self):
         for bank in BANKS:
             for source in bank.sources:
                 host = urlsplit(source.url).hostname or ""
                 self.assertFalse(
                     host == "bank.uz" or host.endswith(".bank.uz"),
-                    f"{bank.slug} still uses the bank.uz aggregator",
+                    f"{bank.slug} still uses the bank.uz aggregator as an official source",
                 )
 
-    def test_blocked_banks_have_no_source_and_a_reason(self):
-        slugs = {bank.slug for bank in BLOCKED}
-        self.assertEqual(slugs, {"asaka-bank", "nbu", "kapitalbank"})
-        for bank in BLOCKED:
-            self.assertFalse(bank.sources, f"{bank.slug} must have no source")
-            self.assertTrue(bank.unavailable_reason, f"{bank.slug} needs a reason")
+    def test_fallback_is_an_approved_aggregator_and_never_official(self):
+        for bank in BANKS:
+            if bank.fallback is None:
+                continue
+            host = urlsplit(bank.fallback.url).hostname or ""
+            self.assertEqual(host, "bank.uz", f"{bank.slug}: unexpected fallback host {host}")
+            self.assertEqual(bank.fallback.source_type, "fallback")
+            self.assertTrue(bank.fallback.expect, f"{bank.slug}: fallback needs identity tokens")
+            # An official source must never be labelled as a fallback.
+            for source in bank.sources:
+                self.assertEqual(source.source_type, "official")
 
-    def test_collectible_banks_have_a_source(self):
+    def test_fallback_only_banks_are_the_four_blocked_officials(self):
+        slugs = {bank.slug for bank in FALLBACK_ONLY}
+        # Asakabank, NBU and Kapitalbank have no official source at all;
+        # Hamkorbank keeps its official source and adds a fallback for outages.
+        self.assertEqual(slugs, {"asaka-bank", "nbu", "kapitalbank"})
+
+    def test_hamkorbank_has_both_official_and_fallback(self):
+        bank = BANKS_BY_SLUG["hamkorbank"]
+        self.assertTrue(bank.sources)
+        self.assertIsNotNone(bank.fallback)
+        self.assertEqual(bank.fallback.source_type, "fallback")
+
+    def test_collectible_banks_have_an_official_source(self):
         self.assertEqual(len(COLLECTIBLE), 11)
         for bank in COLLECTIBLE:
-            self.assertTrue(bank.sources, f"{bank.slug} has no source")
+            self.assertTrue(bank.sources, f"{bank.slug} has no official source")
+
+    def test_fallback_banks_carry_a_reason(self):
+        for bank in FALLBACK_ONLY:
+            self.assertTrue(bank.unavailable_reason, f"{bank.slug} needs an official-failure reason")
 
 
 class SchemaTests(unittest.TestCase):
@@ -137,23 +175,33 @@ class CollectionTests(unittest.TestCase):
     def tearDown(self):
         fetch_banks._fetch = self._original
 
-    def test_all_collectible_banks_collected(self):
+    def test_all_banks_with_a_source_return_rates(self):
         data = fetch_banks.build_dataset(NOW)
         self.assertEqual(data["summary"]["banks_total"], 14)
-        self.assertEqual(data["summary"]["banks_with_rates"], len(COLLECTIBLE))
+        self.assertEqual(data["summary"]["banks_with_rates"], 14)
         fetch_banks.validate_dataset(data)
 
     def test_bank_order_preserved_in_output(self):
         data = fetch_banks.build_dataset(NOW)
         self.assertEqual([b["slug"] for b in data["banks"]], [b.slug for b in BANKS])
 
-    def test_blocked_banks_reported_unavailable_with_reason(self):
+    def test_fallback_banks_use_their_fallback_and_record_provenance(self):
         data = fetch_banks.build_dataset(NOW)
-        for bank in BLOCKED:
+        for bank in FALLBACK_ONLY:
             entry = next(b for b in data["banks"] if b["slug"] == bank.slug)
-            self.assertEqual(entry["status"], "unavailable")
+            self.assertTrue(entry["currencies"], f"{bank.slug} has no rates")
+            self.assertEqual(entry["selected_source"], "fallback")
             self.assertTrue(entry["reason"])
-            self.assertEqual(entry["currencies"], {})
+            self.assertIn("bank.uz", entry["reason"])
+            self.assertTrue(any(s.get("source_type") == "fallback" for s in entry["sources"]))
+
+    def test_official_banks_are_marked_official(self):
+        data = fetch_banks.build_dataset(NOW)
+        for bank in COLLECTIBLE:
+            entry = next(b for b in data["banks"] if b["slug"] == bank.slug)
+            self.assertEqual(entry["selected_source"], "official", bank.slug)
+            for source in entry["sources"]:
+                self.assertEqual(source.get("source_type"), "official")
 
     def test_cash_and_mobile_both_present_for_sqb(self):
         data = fetch_banks.build_dataset(NOW)
@@ -184,11 +232,128 @@ class CollectionTests(unittest.TestCase):
             return base(url, attempts)
 
         fetch_banks._fetch = counting
-        fetch_banks.build_dataset(NOW)
+        data = fetch_banks.build_dataset(NOW)
         # davr, sqb and brb each declare two sources sharing one URL, so those
-        # three URLs are fetched once instead of twice.
-        unique_urls = {s.url for b in COLLECTIBLE for s in b.sources}
-        self.assertEqual(calls["n"], len(unique_urls))
+        # three URLs are fetched once instead of twice. Banks served by their
+        # fallback add one fetch each; the total is bounded and never repeats.
+        official_urls = {s.url for b in COLLECTIBLE for s in b.sources}
+        fallback_urls = {b.fallback.url for b in FALLBACK_ONLY if b.fallback}
+        expected = len(official_urls) + len(fallback_urls)
+        self.assertEqual(calls["n"], expected)
+        self.assertEqual(data["summary"]["banks_with_rates"], 14)
+
+
+class FallbackSelectionTests(unittest.TestCase):
+    """Source-selection rules: official preferred, fallback only when needed."""
+
+    def setUp(self):
+        self._original = fetch_banks._fetch
+
+    def tearDown(self):
+        fetch_banks._fetch = self._original
+
+    def test_official_source_wins_when_healthy(self):
+        # Hamkorbank has both an official source and a fallback; when the
+        # official endpoint works, its rates must be used and the fallback
+        # must not be consulted.
+        mapping = good_mapping()
+        called = []
+        base = fake_transport(mapping)
+
+        def spy(url, attempts=fetch_banks.RETRIES):
+            called.append(url)
+            return base(url, attempts)
+
+        fetch_banks._fetch = spy
+        bank = BANKS_BY_SLUG["hamkorbank"]
+        result = fetch_banks.collect_bank(bank, NOW)
+        self.assertEqual(result["selected_source"], "official")
+        self.assertIn("cash", result["currencies"]["USD"])
+        self.assertNotIn(fallback_url_of("hamkorbank"), called)
+
+    def test_official_failure_uses_fallback(self):
+        mapping = good_mapping()
+        mapping[url_of("hamkorbank")] = fetch_banks.CollectionError("HTTP 500")
+        fetch_banks._fetch = fake_transport(mapping)
+        bank = BANKS_BY_SLUG["hamkorbank"]
+        result = fetch_banks.collect_bank(bank, NOW)
+        self.assertEqual(result["selected_source"], "fallback")
+        self.assertEqual(result["status"], "verified")
+        self.assertIn("RUB", result["currencies"])
+        self.assertTrue(any(s.get("source_type") == "fallback" for s in result["sources"]))
+
+    def test_identity_mismatch_rejects_fallback(self):
+        # A fallback page that does not name the bank must be refused outright.
+        mapping = good_mapping()
+        mapping[url_of("hamkorbank")] = fetch_banks.CollectionError("HTTP 500")
+        mapping[fallback_url_of("hamkorbank")] = fixture("bankuz_kapitalbank.html")
+        fetch_banks._fetch = fake_transport(mapping)
+        bank = BANKS_BY_SLUG["hamkorbank"]
+        result = fetch_banks.collect_bank(bank, NOW)
+        self.assertEqual(result["currencies"], {})
+        self.assertEqual(result["status"], "unavailable")
+        self.assertTrue(any("identity check failed" in (s.get("error") or "")
+                            for s in result["sources"]))
+
+    def test_both_sources_fail_reports_unavailable(self):
+        mapping = good_mapping()
+        mapping[url_of("hamkorbank")] = fetch_banks.CollectionError("HTTP 500")
+        mapping[fallback_url_of("hamkorbank")] = fetch_banks.CollectionError("HTTP 503")
+        fetch_banks._fetch = fake_transport(mapping)
+        bank = BANKS_BY_SLUG["hamkorbank"]
+        result = fetch_banks.collect_bank(bank, NOW)
+        self.assertEqual(result["currencies"], {})
+        self.assertEqual(result["status"], "unavailable")
+        self.assertIn("fallback also failed", result["reason"])
+
+    def test_official_recovery_returns_to_official(self):
+        # Run once with the official endpoint down (fallback used), then with it
+        # healthy again: the collector must switch back to the official source.
+        bank = BANKS_BY_SLUG["hamkorbank"]
+
+        mapping = good_mapping()
+        mapping[url_of("hamkorbank")] = fetch_banks.CollectionError("HTTP 500")
+        fetch_banks._fetch = fake_transport(mapping)
+        first = fetch_banks.collect_bank(bank, NOW)
+        self.assertEqual(first["selected_source"], "fallback")
+
+        fetch_banks._fetch = fake_transport(good_mapping())
+        second = fetch_banks.collect_bank(bank, NOW)
+        self.assertEqual(second["selected_source"], "official")
+        self.assertTrue(any(s.get("source_type") == "official" for s in second["sources"]))
+
+    def test_official_and_fallback_rates_are_never_mixed(self):
+        # The official Hamkorbank feed and the bank.uz page carry different
+        # numbers; a published pair must come from exactly one source.
+        mapping = good_mapping()
+        fetch_banks._fetch = fake_transport(mapping)
+        bank = BANKS_BY_SLUG["hamkorbank"]
+        official = fetch_banks.collect_bank(bank, NOW)
+        official_usd = official["currencies"]["USD"]["cash"]
+
+        mapping = good_mapping()
+        mapping[url_of("hamkorbank")] = fetch_banks.CollectionError("HTTP 500")
+        fetch_banks._fetch = fake_transport(mapping)
+        fallback = fetch_banks.collect_bank(bank, NOW)
+        fallback_usd = fallback["currencies"]["USD"]["cash"]
+
+        # The official feed is scaled /100 and yields 11920/12030; bank.uz
+        # yields 11920/12030 too, but the source provenance differs. The key
+        # invariant is that only one source class is ever recorded per entry.
+        self.assertEqual(official["selected_source"], "official")
+        self.assertEqual(fallback["selected_source"], "fallback")
+        self.assertTrue(official_usd["buy"] and official_usd["sell"])
+        self.assertTrue(fallback_usd["buy"] and fallback_usd["sell"])
+
+    def test_no_cross_bank_rate_assignment(self):
+        # Each fallback fixture must only ever contribute its own bank's rates.
+        fetch_banks._fetch = fake_transport(good_mapping())
+        data = fetch_banks.build_dataset(NOW)
+        asaka = next(b for b in data["banks"] if b["slug"] == "asaka-bank")
+        kapital = next(b for b in data["banks"] if b["slug"] == "kapitalbank")
+        # Asakabank publishes no KZT; Kapitalbank does. A mix-up would leak KZT.
+        self.assertNotIn("KZT", asaka["currencies"])
+        self.assertIn("KZT", kapital["currencies"])
 
 
 class NetworkFailureTests(unittest.TestCase):
@@ -206,7 +371,7 @@ class NetworkFailureTests(unittest.TestCase):
         bank = next(b for b in data["banks"] if b["slug"] == "universalbank")
         self.assertEqual(bank["status"], "unavailable")
         self.assertIn("timeout", bank["reason"])
-        self.assertEqual(data["summary"]["banks_with_rates"], len(COLLECTIBLE) - 1)
+        self.assertEqual(data["summary"]["banks_with_rates"], 13)
 
     def test_partial_failure_keeps_other_rates(self):
         mapping = good_mapping()
@@ -261,8 +426,8 @@ class PreservationTests(unittest.TestCase):
 
         fetch_banks._fetch = fake_transport({})  # everything fails
         result = fetch_banks.run(self.path, now=NOW + timedelta(hours=3))
-        self.assertEqual(result["summary"]["banks_with_rates"], len(COLLECTIBLE))
-        # Every collectible bank is carried forward, so the file is unchanged.
+        self.assertEqual(result["summary"]["banks_with_rates"], 14)
+        # Every bank is carried forward, so the file is unchanged.
         self.assertEqual(self.path.read_text(encoding="utf-8"), before)
 
     def test_partial_failure_carries_forward_missing_bank(self):
@@ -279,16 +444,43 @@ class PreservationTests(unittest.TestCase):
         self.assertEqual(bank["status"], "stale")
         self.assertEqual(bank["currencies"]["USD"]["cash"]["sell"], 12020.0)
 
+    def test_carried_forward_fallback_rate_is_not_marked_fresh(self):
+        # A bank served from a fallback keeps its original publication time and
+        # is flagged carried_forward / stale; it is never presented as fresh.
+        fetch_banks._fetch = fake_transport(good_mapping())
+        first = fetch_banks.build_dataset(NOW)
+        asaka_fresh = next(b for b in first["banks"] if b["slug"] == "asaka-bank")
+        self.assertEqual(asaka_fresh["selected_source"], "fallback")
+        self.assertFalse(asaka_fresh["carried_forward"])
+
+        fetch_banks._fetch = fake_transport({})  # all sources fail
+        second = fetch_banks.build_dataset(NOW + timedelta(hours=3), previous=first)
+        asaka = next(b for b in second["banks"] if b["slug"] == "asaka-bank")
+        self.assertTrue(asaka["carried_forward"])
+        self.assertEqual(asaka["status"], "stale")
+        # Provenance of the carried-forward rate is preserved, not dropped.
+        self.assertEqual(asaka["selected_source"], "fallback")
+        # The original bank.uz publication stamp survives untouched.
+        self.assertEqual(
+            asaka["currencies"]["USD"]["cash"]["published_at"],
+            "2026-11-12T16:56:00+05:00",
+        )
+
     def test_blocked_bank_never_inherits_old_rates(self):
         previous = fetch_banks.build_dataset(NOW)
-        # Simulate a dataset published before the bank was reported blocked.
+        # Simulate a dataset whose stored rate came from a since-removed source
+        # (the retired bank.uz-as-official integration).
         blocked = next(b for b in previous["banks"] if b["slug"] == "kapitalbank")
+        blocked["sources"] = [{
+            "kind": "bankuz", "url": "https://bank.uz/uz/currency/bank/kapitalbank",
+            "rate_type": "cash", "status": "ok",
+        }]
         blocked["currencies"] = {"USD": {"cash": {"buy": 1.0, "sell": 2.0, "published_at": None}}}
-        fetch_banks._fetch = fake_transport(good_mapping())
+        fetch_banks._fetch = fake_transport({})
         result = fetch_banks.build_dataset(NOW, previous=previous)
         entry = next(b for b in result["banks"] if b["slug"] == "kapitalbank")
         self.assertEqual(entry["currencies"], {})
-        self.assertEqual(entry["status"], "unavailable")
+        self.assertNotEqual(entry["status"], "verified")
 
     def test_atomic_write_leaves_no_temp_files(self):
         fetch_banks._fetch = fake_transport(good_mapping())

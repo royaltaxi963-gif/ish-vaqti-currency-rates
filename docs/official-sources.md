@@ -4,7 +4,16 @@ This document records, for each of the 14 supported banks, the official source
 the collector uses, how it was verified, and its current status. The previous
 implementation read 11 of the 14 banks from `bank.uz`, a third-party
 aggregator. That is now forbidden: every bank is read from its own official
-domain or an authorised public API, or reported as **blocked**.
+domain or an authorised public API.
+
+Four banks have no reachable official rate source (see the per-bank notes).
+Rather than leave them empty, the collector uses a **verified fallback**: the
+`bank.uz` aggregator, which is crawled only with the permission its
+`robots.txt` grants, with the bank's identity confirmed on every page. A
+fallback is consulted *only* when the official source yields no rates, its
+provenance is recorded separately (`source_type: "fallback"`,
+`selected_source: "fallback"`), and its values are never mixed with official
+ones. See [Verified fallback](#verified-fallback-bankuz) for the policy.
 
 All HTTP results below were re-verified on 2026-11-12/13 (Asia/Tashkent) with a
 plain `urllib`/`curl` request and a normal desktop User-Agent, plus a headless
@@ -17,36 +26,21 @@ control was bypassed. Rates are UZS per 1 unit unless noted.
 |---|------|-----------------|------|-----|-----|-----|-----|-----|------|--------|--------|
 | 1 | Universalbank | `universalbank.uz/api/currencies/daily` | 200 | ✓ | ✓ | ✓ (sell only) | – | ✓ | ✓ | – | VERIFIED |
 | 2 | Davr Bank | `davrbank.uz/uz/exchange-rate` | 200 | ✓ | ✓ | – | – | ✓ | ✓ | ✓ | VERIFIED |
-| 3 | Asakabank | `asakabank.uz` (client-side, `back.asakabank.uz`) | – | – | – | – | – | – | – | – | BLOCKED |
+| 3 | Asakabank | `bank.uz/uz/currency/bank/asaka-bank` (fallback) | 200 | ✓ | ✓ | ✓ (sell only) | – | ✓ | ✓ | – | VERIFIED (fallback) |
 | 4 | Trastbank | `trastbank.uz/uz/services/exchange-rates/` | 200 | ✓ | ✓ | ✓ | – | ✓ | ✓ | – | VERIFIED |
 | 5 | SQB | `sqb.uz/api/site-kurs-api/` | 200 | ✓ | ✓ | ✓ (sell only) | – | ✓ | ✓ | ✓ | VERIFIED |
 | 6 | Mikrokreditbank | `mkbank.uz/uz/services/open_data/rates/json/` | 200 | ✓ | ✓ | ✓ (sell only) | – | ✓ | ✓ | ✓ | VERIFIED |
 | 7 | Ipak Yo‘li Bank | `ipakyulibank.uz/physical/valyuta-ayirboshlash` | 200 | ✓ | ✓ | ✓ | – | ✓ | ✓ | ✓ | VERIFIED |
-| 8 | O‘zmilliybank (NBU) | `nbu.uz` | 000 | – | – | – | – | – | – | – | BLOCKED |
+| 8 | O‘zmilliybank (NBU) | `bank.uz/uz/currency/bank/nbu` (fallback) | 200 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | – | VERIFIED (fallback) |
 | 9 | Ipoteka-bank | `ipotekabank.uz/services/currency/` | 200 | ✓ | ✓ | – | – | ✓ | ✓ | ✓ | VERIFIED |
 | 10 | BRB | `brb.uz/api/currency/compare?type=jismoniy` | 200 | ✓ | ✓ | ✓ | – | ✓ | ✓ | ✓ | VERIFIED |
 | 11 | Agrobank | `agrobank.uz/api/v1/?action=pages&code=uz/person/exchange_rates` | 200 | ✓ | ✓ | ✓ (sell only) | – | ✓ | ✓ | ✓ | VERIFIED |
-| 12 | Hamkorbank | `api-dbo.hamkorbank.uz/webflow/v1/exchanges` | 500* | – | – | – | – | – | – | – | BLOCKED (upstream) |
+| 12 | Hamkorbank | `api-dbo.hamkorbank.uz/webflow/v1/exchanges` → `bank.uz/…/hamkorbank` (fallback) | 500 → 200 | ✓ | ✓ | ✓ | – | ✓ | ✓ | ✓ | VERIFIED (fallback) |
 | 13 | Xalq banki | `xb.uz/api/v1/external/client/exchange-rate/last-thirty-day` | 200 | ✓ | ✓ | ✓ | – | – | ✓ | – | VERIFIED |
-| 14 | Kapitalbank | `kapitalbank.uz` | 403 | – | – | – | – | – | – | – | BLOCKED |
+| 14 | Kapitalbank | `bank.uz/uz/currency/bank/kapitalbank` (fallback) | 200 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | – | VERIFIED (fallback) |
 
 `✓ (sell only)` means the bank genuinely does not publish a buying rate for that
 currency; the value is stored as `null`, not fabricated.
-
-\* Hamkorbank's official endpoint is currently failing upstream: it returns
-HTTP `500` `{"status":"Failure","error_code":-10,"error_note":"internal
-error","data":null}` for every request (with and without browser headers, and
-from a browser fetch context). The `/uz/exchange-rate/` page itself still
-returns `200` but ships no server-rendered rates — its table is populated by
-that same failing call — so no official rate value is reachable right now. The
-bank is therefore treated as blocked upstream; the last verified rates are
-carried forward with their original timestamps rather than overwritten.
-
-No bank among the 14 publishes a personal cash or mobile KZT rate on an
-official page that was reachable. SQB's public API does carry a KZT row, but
-only under its `juridic` (legal-entity) channel, which is out of scope; the
-personal `offline`/`online`/`atm` channels omit KZT. KZT therefore stays `null`
-everywhere and the collector does not invent it.
 
 ## Per-bank notes
 
@@ -64,14 +58,15 @@ Server-rendered HTML with two tables, headed *Bank ofislarida valyutalar kursi*
 **ignored**; `Sotuv` is the bank's selling price and `Xarid` the buying price.
 RUB is not published (all-zero rows are dropped).
 
-### Asakabank — BLOCKED
+### Asakabank — official BLOCKED, fallback used
 `asakabank.uz` is a Nuxt SPA. The rate table on
 `/uz/press-center/exchange-rates` is rendered client-side; the served HTML
 contains no rates (only CSS/markup). Reverse-engineering the Nuxt config gives
 `apiBase = https://back.asakabank.uz`, but that host answers HTTP 403 to every
 path from the collector network (`/`, `/rates`, `/exchange-rates`, `/v1/rates`,
-`/openapi.json`), and no public rate route is documented. The bank is recorded
-as blocked with this reason; no third-party aggregator is substituted.
+`/openapi.json`), and no public rate route is documented. No official rate
+value is reachable, so the bank is served from the verified `bank.uz` fallback
+(see below); its official status stays blocked.
 
 ### Trastbank — `/uz/services/exchange-rates/`
 Server-rendered table `Valyuta | Sotib olish | Sotish | MB kursi`, plus a stamp
@@ -99,12 +94,15 @@ Nuxt page with an inline `__NUXT_DATA__` graph holding three tabs: `Ilovada`
 **scaled by 100**; `lastUpdated` is a Unix epoch. The app rate fills `mobile`;
 the ATM rate fills `mobile` only when the app does not publish that currency.
 
-### O‘zmilliybank (NBU) — BLOCKED
+### O‘zmilliybank (NBU) — official BLOCKED, fallback used
 `nbu.uz` resolves to `185.104.210.5` (`www.nbu.uz` shares it). The host accepts
 no TCP connection on port 80 or 443 from the collector network: both a
 `urllib` request and a raw `socket`/TLS handshake time out (`000`). Alternative
 hosts (`api.nbu.uz`, `open.nbu.uz`, `online.nbu.uz`, `my.nbu.uz`) do not
-resolve; `mobile.nbu.uz` resolves but returns HTTP 403. Recorded as blocked.
+resolve; `mobile.nbu.uz` resolves but returns HTTP 403. No official rate value
+is reachable, so the bank is served from the verified `bank.uz` fallback. The
+fallback is the only source that yields a personal-channel KZT rate (see
+below).
 
 ### Ipoteka-bank — `/services/currency/`
 One official index page publishes every currency across three tabs:
@@ -136,20 +134,61 @@ JSON `{data: [...]}`; values are integers **scaled by 100**.
 the `begin_sum_i == 0` row is the standard rate (rows with `begin_sum_i > 0` are
 a "up to 10,000" tier and are ignored when the standard row is present).
 `created_at` is the stamp. The endpoint is the one the bank's own
-`/uz/exchange-rate/` page calls; it is currently failing upstream (see above),
-so this parser is retained but the bank's live status is blocked until the
-endpoint recovers.
+`/uz/exchange-rate/` page calls; it is currently failing upstream (HTTP `500`
+`{"status":"Failure","error_code":-10,"error_note":"internal error","data":null}`
+for every request, with and without browser headers). The `/uz/exchange-rate/`
+page itself still returns `200` but ships no server-rendered rates — its table is
+populated by that same failing call — so no official rate value is reachable
+right now. The parser is retained and used the moment the endpoint recovers;
+until then the bank is served from the verified `bank.uz` fallback.
 
 ### Xalq banki — `GET /api/v1/external/client/exchange-rate/last-thirty-day`
 JSON keyed by ISO 4217 **numeric** code; each holds a `data` map of
 `DD-MM-YYYY` → `{buying, selling}`. The most recent date is used and its stamp
 becomes `published_at`.
 
-### Kapitalbank — BLOCKED
+### Kapitalbank — official BLOCKED, fallback used
 `kapitalbank.uz` answers HTTP 403 with a Cloudflare anti-bot challenge
 ("Just a moment…"). `kapital24.uz` redirects (301) to `kapitalbank.uz`, and no
 public rate API host resolves. Bypassing the challenge would violate the source
-policy, so the bank is recorded as blocked with this reason.
+policy, so no official rate value is reachable and the bank is served from the
+verified `bank.uz` fallback.
+
+## Verified fallback (bank.uz)
+
+`bank.uz` was the aggregator the previous implementation used for 11 banks; as
+an *official* source it is forbidden. It is used here only as a documented
+fallback for the four banks whose own source is unreachable, under these rules:
+
+* **Permission.** `https://bank.uz/robots.txt` returns `User-agent: *` /
+  `Allow: /` with `Crawl-delay: 3`. Only pages that `robots.txt` allows are
+  read, one request per bank per cycle. (By contrast `onmap.uz` returns
+  `Disallow: /api/`, so its API is never scraped, and `finq.uz` was used only
+  for manual cross-checking.)
+* **Identity.** Every page must name the bank (`<title>`/`<h1>`); the collector
+  passes the expected name tokens and refuses the page if they are absent, so a
+  redirect or layout swap can never attribute one bank's rates to another.
+* **Precedence.** The official source is always tried first. The fallback runs
+  only when the official source yields no rates. A published pair always comes
+  from exactly one source; official and fallback values are never mixed.
+* **Provenance.** Fallback sources carry `source_type: "fallback"` and the
+  entry carries `selected_source: "fallback"` plus a `reason` naming the
+  official failure, so a consumer can tell official data from fallback data.
+* **Units and channels.** bank.uz labels each row `Birlik` (unit). Only rows
+  whose unit is exactly `1` are published; a row quoted per 10/100/1000 is
+  dropped rather than mis-scaled. Rows are branch cash. A `0` buying or selling
+  cell means the bank does not transact that side and is stored as `null`.
+* **Timestamps.** The per-row `Yangilanish vaqti` stamp is parsed and preserved,
+  so a fallback rate is never presented as fresher than it is.
+
+### Cross-checks performed
+* Trastbank: bank.uz values are identical to the official page (USD 11920/12020,
+  EUR 12850/13400, RUB 90/150) — the two sources agree where both exist.
+* Asakabank: an independent aggregator (`finq.uz`) confirms bank.uz's
+  USD 11950/11990; BRB is confirmed at 11945/12030.
+* KZT: CBU's reference KZT is ≈26.88 UZS per unit. bank.uz NBU KZT (16/27) and
+  Kapitalbank KZT (25/28) bracket it, confirming genuine per-1-tenge quotes
+  rather than a per-100 mis-scaling.
 
 ## Channel model
 

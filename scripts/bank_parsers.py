@@ -784,6 +784,45 @@ def _xalq_date_key(stamp) -> tuple:
 
 
 # --------------------------------------------------------------------------- #
+# bank.uz fallback (https://bank.uz/uz/currency/bank/<slug>)
+# --------------------------------------------------------------------------- #
+
+_BANKUZ_ROW = re.compile(
+    r'flag-[a-z]{2}"></span>\s*([A-Z]{3}).*?'
+    r'Birlik</span><span class="medium-text">\s*([\d\s]+?)\s*</span>.*?'
+    r'Sotib olish</span>\s*<span class="medium-text">\s*([\d\s]+?)\s*</span>.*?'
+    r'Sotish</span>\s*<span class="medium-text">\s*([\d\s]+?)\s*</span>.*?'
+    r'<span class="green-date">\s*([^<]+?)\s*</span>',
+    re.S,
+)
+
+
+def parse_bankuz(page: str, checked_at: datetime) -> dict:
+    """Parse one ``bank.uz/uz/currency/bank/<slug>`` page.
+
+    bank.uz republishes each bank's own published cash/card rate and exposes no
+    cash-versus-mobile split, so every row is recorded as ``cash``. The unit
+    ("Birlik") is read per row; only a unit of 1 is accepted, because a value
+    quoted per 10/100/1000 units must not be published as a per-1 rate. A zero
+    buying cell means "not offered" and is dropped by :func:`_merge`.
+    """
+    marker = page.find('class="table-kurs"')
+    if marker < 0:
+        raise LayoutError("bank.uz: rate table not found")
+    segment = page[marker:marker + 60000]
+    rates: dict = {}
+    for code, unit, buy, sell, stamp in _BANKUZ_ROW.findall(segment):
+        if _to_float(unit) != 1.0:
+            # A unit we cannot confirm as per-1 must not be published per-1.
+            continue
+        published = _parse_dt(stamp, checked_at)
+        _merge(rates, code, "cash", _to_float(buy), _to_float(sell), published)
+    if not rates:
+        raise LayoutError("bank.uz: no rows parsed")
+    return rates
+
+
+# --------------------------------------------------------------------------- #
 # Dispatch
 # --------------------------------------------------------------------------- #
 
@@ -798,6 +837,8 @@ def parse_source(kind: str, text: str, section: str, checked_at: datetime) -> di
         return parse_ipakyuli(text, checked_at)
     if kind == "ipoteka-html":
         return parse_ipoteka(text, checked_at)
+    if kind == "bankuz-html":
+        return parse_bankuz(text, checked_at)
 
     payload = json.loads(text)
     if kind == "sqb-api":

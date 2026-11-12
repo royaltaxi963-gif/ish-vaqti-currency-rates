@@ -15,15 +15,13 @@ from scripts.fetch_banks import collect_bank
 
 LIVE = os.environ.get("ISH_VAQTI_LIVE") == "1"
 
-# Banks whose official source is reachable and must return rates. Hamkorbank is
-# excluded because its official endpoint is currently failing upstream (HTTP
-# 500, `{"status":"Failure","error_code":-10}`), so it is expected to be
-# blocked rather than up.
+# Banks whose own official source is reachable and must return rates.
 EXPECTED_UP = {
     "universalbank", "davr-bank", "trastbank", "sqb", "mikrokreditbank",
     "ipakyulibank", "ipoteka-bank", "brb", "agrobank", "xalq-bank",
 }
-BLOCKED = {"asaka-bank", "nbu", "kapitalbank", "hamkorbank"}
+# Banks that rely on their verified fallback when the official source is down.
+FALLBACK_BANKS = {"asaka-bank", "nbu", "hamkorbank", "kapitalbank"}
 
 
 @unittest.skipUnless(LIVE, "set ISH_VAQTI_LIVE=1 to run live source checks")
@@ -39,11 +37,17 @@ class LiveSourceTests(unittest.TestCase):
         print(f"\nlive: {len(reachable)}/{len(BANKS)} banks returned rates: {sorted(reachable)}")
         self.assertFalse(missing, f"expected rates from {sorted(missing)}")
 
-    def test_blocked_banks_report_a_reason(self):
-        for slug in BLOCKED:
+    def test_fallback_banks_return_rates_or_a_reason(self):
+        # Every fallback bank must either return rates (with provenance) or be
+        # reported unavailable with an explicit reason; never silently empty.
+        for slug in FALLBACK_BANKS:
             result = self.results[slug]
-            self.assertFalse(result["currencies"], f"{slug} returned rates unexpectedly")
-            self.assertTrue(result["reason"], f"{slug} is unavailable without a reason")
+            if result["currencies"]:
+                self.assertIn(result["selected_source"], {"official", "fallback"})
+                self.assertTrue(any(s.get("source_type") in {"official", "fallback"}
+                                    for s in result["sources"]))
+            else:
+                self.assertTrue(result["reason"], f"{slug} is empty without a reason")
 
     def test_no_unsupported_currencies(self):
         for slug, result in self.results.items():
@@ -54,6 +58,27 @@ class LiveSourceTests(unittest.TestCase):
         for slug, result in self.results.items():
             if result["currencies"]:
                 self.assertTrue(result["sources"], f"{slug} has rates but no sources")
+
+    def test_fallback_rates_always_carry_a_publication_timestamp(self):
+        # bank.uz publishes a "Yangilanish vaqti" stamp per row, so a fallback
+        # rate must always have one; an official API that omits the field is a
+        # documented source limitation, not a parser failure.
+        for slug in FALLBACK_BANKS:
+            result = self.results[slug]
+            for code, kinds in result["currencies"].items():
+                for kind, payload in kinds.items():
+                    self.assertIsNotNone(
+                        payload.get("published_at"),
+                        f"{slug} {code}/{kind} (fallback) has no publication timestamp",
+                    )
+
+    def test_present_timestamps_are_well_formed(self):
+        for slug, result in self.results.items():
+            for code, kinds in result["currencies"].items():
+                for kind, payload in kinds.items():
+                    stamp = payload.get("published_at")
+                    if stamp is not None:
+                        datetime.fromisoformat(stamp)
 
     def test_rub_collected_where_published(self):
         # These banks publish RUB on their official page; the adapter must return it.

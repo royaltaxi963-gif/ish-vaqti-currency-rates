@@ -18,27 +18,32 @@ guarantee.
 
 ## Supported banks (14, in output order)
 
-| # | Bank | Official source | Status |
+| # | Bank | Source | Status |
 | --- | --- | --- | --- |
 | 1 | Universalbank | `universalbank.uz` API (cash) | VERIFIED |
 | 2 | Davr Bank | `davrbank.uz` (cash + mobile) | VERIFIED |
-| 3 | Asakabank | `asakabank.uz` (client-side, no public API) | BLOCKED |
+| 3 | Asakabank | `bank.uz` fallback (official blocked) | VERIFIED (fallback) |
 | 4 | Trastbank | `trastbank.uz` (cash) | VERIFIED |
 | 5 | SQB | `sqb.uz` API (cash + mobile) | VERIFIED |
 | 6 | Mikrokreditbank | `mkbank.uz` open-data feed (cash + mobile) | VERIFIED |
 | 7 | Ipak Yo‘li Bank | `ipakyulibank.uz` (cash + mobile) | VERIFIED |
-| 8 | O‘zmilliybank | `nbu.uz` (unreachable) | BLOCKED |
+| 8 | O‘zmilliybank | `bank.uz` fallback (official unreachable) | VERIFIED (fallback) |
 | 9 | Ipoteka-bank | `ipotekabank.uz` (cash + mobile) | VERIFIED |
 | 10 | Biznesni rivojlantirish banki (BRB) | `brb.uz` API (cash + mobile) | VERIFIED |
 | 11 | Agrobank | `agrobank.uz` API (cash + mobile) | VERIFIED |
-| 12 | Hamkorbank | `hamkorbank.uz` API (upstream HTTP 500) | BLOCKED |
+| 12 | Hamkorbank | `hamkorbank.uz` API → `bank.uz` fallback (official HTTP 500) | VERIFIED (fallback) |
 | 13 | Xalq banki | `xb.uz` API (cash) | VERIFIED |
-| 14 | Kapitalbank | `kapitalbank.uz` (Cloudflare 403) | BLOCKED |
+| 14 | Kapitalbank | `bank.uz` fallback (official Cloudflare 403) | VERIFIED (fallback) |
 
 Every bank is read from its own official domain or an authorised public API.
-See `docs/official-sources.md` for the per-bank verification record. A bank
-whose official source cannot be reached is reported as `unavailable`/blocked
-with an explicit reason — never via a third-party aggregator.
+For the four banks whose official source is unreachable, the collector falls
+back to the `bank.uz` aggregator, which is crawled only as its `robots.txt`
+permits and with the bank's identity confirmed on each page. The official
+source is always tried first; a fallback is used only when the official source
+yields no rates; official and fallback values are never mixed, and the entry
+records `selected_source` (`official` or `fallback`) plus a `reason` naming the
+official failure. See `docs/official-sources.md` for the per-bank verification
+record and the fallback policy.
 
 Rates are genuinely published by each bank. `null` means the bank does not
 publish that rate — it is never fabricated. Currencies and rate types a bank
@@ -65,9 +70,10 @@ does not publish are simply absent from its `currencies` object.
       "stale": false,
       "carried_forward": false,
       "reason": null,
+      "selected_source": "official",  // official | fallback | null
       "sources": [
         { "kind": "sqb-api", "url": "https://sqb.uz/api/site-kurs-api/",
-          "rate_type": "cash", "status": "ok" }
+          "rate_type": "cash", "source_type": "official", "status": "ok" }
       ],
       "currencies": {
         "USD": {
@@ -85,6 +91,10 @@ does not publish are simply absent from its `currencies` object.
   `generated_at` (the collection time). `null` when the source publishes none.
 * `status: "stale"` means the bank could not be refreshed and its last verified
   rates are being served; `carried_forward: true` marks those rates.
+* `selected_source` says which source class produced the rates: `official` (the
+  bank's own source), `fallback` (the verified `bank.uz` fallback) or `null`
+  (unavailable). A `fallback` entry also carries a `reason` naming the official
+  failure. Each `sources[]` entry carries the same distinction in `source_type`.
 * A failed refresh never overwrites the last verified dataset, and never
   publishes a dataset with no rates at all.
 
@@ -124,10 +134,11 @@ python -m scripts.check_endpoints                # probe the public endpoints
 * Not every bank publishes a distinct mobile rate; banks that publish cash only
   report `cash`. SQB, BRB, Davr, Ipak Yo‘li, Mikrokreditbank, Agrobank,
   Hamkorbank and Ipoteka-bank publish a mobile/app (or ATM) rate as well.
-* KZT is not offered on the personal cash/mobile channels of any reachable
-  official source, so it stays `null`; GBP and RUB are not offered by all banks.
-* Four banks are currently blocked and reported as `unavailable` with a reason
-  (Asakabank, O‘zmilliybank, Hamkorbank, Kapitalbank); see
-  `docs/official-sources.md`.
+* Four banks (Asakabank, O‘zmilliybank, Hamkorbank, Kapitalbank) have no
+  reachable official rate source and are served from the verified `bank.uz`
+  fallback (`selected_source: "fallback"`). KZT is available for O‘zmilliybank
+  and Kapitalbank through that fallback; other banks publish no personal-channel
+  KZT, so it stays `null` rather than being fabricated. GBP and RUB are not
+  offered by all banks. See `docs/official-sources.md`.
 * GitHub Actions scheduled runs are best-effort and may be delayed.
 

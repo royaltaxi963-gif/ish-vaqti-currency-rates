@@ -69,6 +69,11 @@
         "name": { "type": "string", "minLength": 1 },
         "status": { "enum": ["verified", "partial", "stale", "unavailable"] },
         "reason": { "type": ["string", "null"] },
+        "selected_source": {
+          "type": ["string", "null"],
+          "enum": ["official", "fallback", null],
+          "description": "Which source class produced the published rates: the bank's own official source, a verified third-party fallback, or null when the bank is unavailable."
+        },
         "stale": {
           "type": "boolean",
           "description": "True when every published timestamp is older than max_age_hours."
@@ -96,6 +101,10 @@
         "kind": { "type": "string" },
         "url": { "type": "string", "format": "uri" },
         "rate_type": { "enum": ["cash", "mobile"] },
+        "source_type": {
+          "enum": ["official", "fallback"],
+          "description": "official for the bank's own source, fallback for the verified bank.uz aggregator."
+        },
         "status": { "enum": ["ok", "error"] },
         "error": { "type": "string" }
       }
