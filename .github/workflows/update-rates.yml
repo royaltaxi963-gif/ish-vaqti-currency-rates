@@ -82,21 +82,8 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Configure Pages
-        id: pages
         uses: actions/configure-pages@v5
-        with:
-          # Enables Pages with the GitHub Actions source on first run. This needs
-          # a token that can create the Pages site; if it is rejected, enable
-          # Pages once by hand: Settings -> Pages -> Source = GitHub Actions.
-          enablement: true
-        continue-on-error: true
-
-      - name: Explain Pages setup when unavailable
-        if: steps.pages.outcome == 'failure'
-        run: |
-          echo "::warning title=Pages not enabled::Enable Pages once: Settings -> Pages -> Source = GitHub Actions. The JSON data is already committed and served from raw.githubusercontent.com and jsDelivr."
 
       - name: Deploy to GitHub Pages
         id: deployment
-        if: steps.pages.outcome == 'success'
         uses: actions/deploy-pages@v4
