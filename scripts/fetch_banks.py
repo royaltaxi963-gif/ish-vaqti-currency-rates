@@ -76,14 +76,18 @@ def collect_bank(bank: Bank, checked_at: datetime) -> dict:
     merged: dict = {}
     sources: list[dict] = []
     errors: list[str] = []
+    cache: dict[str, str] = {}
 
     for source in bank.sources:
         sections = source.sections or ("",)
         for section in sections:
             entry = {"kind": source.kind, "url": source.url, "rate_type": source.kind_label}
             try:
-                text = _fetch(source.url)
-                parsed = parse_source(source.kind, text, section, checked_at)
+                # An identical URL is fetched only once per collection cycle,
+                # even when several sections or rate kinds share it.
+                if source.url not in cache:
+                    cache[source.url] = _fetch(source.url)
+                parsed = parse_source(source.kind, cache[source.url], section, checked_at)
             except (CollectionError, LayoutError, ValueError) as error:
                 entry["status"] = "error"
                 entry["error"] = str(error)
@@ -123,16 +127,34 @@ def collect_bank(bank: Bank, checked_at: datetime) -> dict:
     }
 
 
-def _merge_with_previous(slug: str, entry: dict, previous: dict | None) -> dict:
+def _same_sources(bank: Bank, old: dict) -> bool:
+    """True when the previous dataset used the same official sources.
+
+    Carrying rates forward across a source change would publish values that a
+    different upstream produced, so a changed (or unrecorded) source set disables
+    carry-forward for that bank.
+    """
+    recorded = old.get("sources")
+    if not isinstance(recorded, list):
+        return False
+    previous = {(s.get("kind"), s.get("url")) for s in recorded if isinstance(s, dict)}
+    current = {(s.kind, s.url) for s in bank.sources}
+    return bool(current) and previous == current
+
+
+def _merge_with_previous(bank: Bank, entry: dict, previous: dict | None) -> dict:
     """Carry forward verified rates when a refresh is missing or partial.
 
     A bank that fails to refresh keeps its last verified rates instead of being
     overwritten with an empty set, so consumers never lose data on a bad run.
+    A bank with no configured source is deliberately unavailable (for example a
+    blocked official site), so it must never inherit rates collected earlier
+    from a different, since-removed source.
     """
-    if previous is None:
+    if previous is None or not bank.sources:
         return entry
-    old = next((b for b in previous.get("banks", []) if b.get("slug") == slug), None)
-    if not old or not old.get("currencies"):
+    old = next((b for b in previous.get("banks", []) if b.get("slug") == bank.slug), None)
+    if not old or not old.get("currencies") or not _same_sources(bank, old):
         return entry
 
     merged = dict(entry["currencies"])
@@ -203,7 +225,7 @@ def build_dataset(now: datetime, previous: dict | None = None, fetch_workers: in
     banks = []
     verified = 0
     for bank in BANKS:
-        entry = _merge_with_previous(bank.slug, results[bank.slug], previous)
+        entry = _merge_with_previous(bank, results[bank.slug], previous)
         if entry["currencies"]:
             verified += 1
         entry["stale"] = _bank_stale(entry["currencies"], now)

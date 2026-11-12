@@ -49,7 +49,9 @@ def validate_banks(path: Path = BANKS_FILE) -> dict:
         if bank.get("status") not in ("verified", "partial", "stale", "unavailable"):
             _fail(f"{slug}: unknown status {bank.get('status')!r}")
         if not bank.get("sources"):
-            _fail(f"{slug}: no sources recorded")
+            # A blocked bank has no official source; it must say why.
+            if bank.get("status") != "unavailable" or not bank.get("reason"):
+                _fail(f"{slug}: no sources recorded and no reason given")
         for source in bank["sources"]:
             if not source.get("url", "").startswith("https://"):
                 _fail(f"{slug}: source url must be https")

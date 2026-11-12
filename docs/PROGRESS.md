@@ -2,57 +2,60 @@
 
 Durable state for resuming this work. Update after each verified increment.
 
-## Status: implementation complete, awaiting review
+## Status: official-source migration implemented, awaiting review
 
-Last verified: 2026-11-12 (Asia/Tashkent evening), live collection of all 14 banks.
+Last verified: 2026-11-12 (Asia/Tashkent evening) with a live collection run.
 
 ## Done
 
 * `scripts/banks.py` — authoritative 14-bank registry in required output order.
-* `scripts/bank_parsers.py` — parsers for bank.uz, SQB API, BRB API, Davr HTML.
+  Each bank points at its **own official domain** (or an authorised public API).
+  Banks whose official source is unreachable are recorded with no source and an
+  explicit `unavailable_reason`.
+* `scripts/bank_parsers.py` — one parser per official source:
+  Universalbank, Davr, Trastbank, SQB, Mikrokreditbank, Ipak Yo'li, Ipoteka,
+  BRB, Agrobank, Hamkorbank, Xalq banki. `bank.uz` parsing was removed.
 * `scripts/fetch_banks.py` — concurrent collector, schema v2 dataset, atomic
-  writes, previous-dataset preservation, staleness flags.
-* `scripts/validate_data.py` — dataset + schema validation (no dependencies).
-* `scripts/build_site.py` + `site/` — static GitHub Pages bundle with a
-  stale-aware client.
-* `scripts/check_endpoints.py` — probes the public distribution endpoints.
-* `schemas/banks.schema.json` — versioned JSON Schema (draft 2020-12).
-* `docs/endpoints.md` — endpoint and fallback-hosting documentation.
-* `.github/workflows/update-rates.yml` — schedule, tests, refresh, commit,
-  Pages deploy (with `enablement: true`).
-* `tests/` — 76 offline tests + 4 live-source tests (opt-in via `ISH_VAQTI_LIVE=1`).
+  writes, previous-dataset preservation, staleness flags, per-cycle URL cache
+  (a shared URL is fetched once), and carry-forward that is disabled when a
+  bank's source set changes or the bank is deliberately blocked.
+* `scripts/validate_data.py` — dataset + schema validation (no dependencies);
+  now accepts a blocked bank with no sources when it carries a reason.
+* `schemas/banks.schema.json` — unchanged versioned JSON Schema (draft 2020-12).
+* `docs/official-sources.md` — per-bank verification matrix and evidence.
+* `tests/` — 113 offline tests + 6 opt-in live-source tests.
 
 ## Verified evidence
 
-* Live collection: 14/14 banks returned rates (2026-11-12).
-* `python -m unittest discover -s tests` → 76 passed, 4 skipped.
-* `ISH_VAQTI_LIVE=1 python -m unittest tests.test_live_sources` → 4 passed.
-* `python -m scripts.validate_data` → `OK: 14/14 banks with rates`.
-* `python -m scripts.build_site` → `_site/` bundle; rendered in a browser, all
-  14 banks in order.
-* GitHub Actions run `43263517312` (branch `feat/bank-rates-14-banks`)
-  succeeded: unit tests, live source checks (`live: 14/14 banks returned
-  rates`), CBU fetch, bank fetch, validation, data commit and site build. The
-  deploy job warns and skips when Pages cannot be enabled.
-* The run committed `data/banks.json` with `banks_with_rates: 14` (commit
-  `5a7d56a`, then `3c814b6`).
-* Fallback endpoints confirmed serving the CI dataset:
-  `raw.githubusercontent.com` and `cdn.jsdelivr.net` (both 200, 14 banks).
-  GitHub Pages returns 404 until Pages is enabled on `main`.
+* `python -m unittest discover -s tests` → 113 passed, 4 skipped.
+* `ISH_VAQTI_LIVE=1 python -m unittest tests.test_live_sources` → 6 passed;
+  live collection reached **10/14** banks: agrobank, brb, davr-bank,
+  ipakyulibank, ipoteka-bank, mikrokreditbank, sqb, trastbank, universalbank,
+  xalq-bank.
+* `python -m scripts.fetch_banks` → `verified rates for 10/14 banks`.
+* `python -m scripts.validate_data` → `OK: 10/14 banks with rates`.
+* RUB is collected from every bank that publishes it (Trastbank, Ipak Yo'li,
+  BRB, Xalq, Agrobank sell-side, SQB sell-side, Universalbank sell-side,
+  MKBank sell-side, Hamkorbank).
+
+## Blocked banks (not fabricated)
+
+* **Asakabank** — Nuxt SPA; rates load client-side from `back.asakabank.uz`; no
+  public rate endpoint reachable.
+* **O'zmilliybank (NBU)** — `nbu.uz` (185.104.210.5) refuses ports 80/443.
+* **Kapitalbank** — Cloudflare anti-bot challenge (HTTP 403); not bypassed.
+
+Hamkorbank's official endpoint is intermittently `503`; when it fails the
+collector preserves the last verified rates with their original timestamps.
 
 ## Open items
 
-* GitHub Pages could not be enabled via the REST API with the current token
-  (`Resource not accessible by integration`). The workflow sets
-  `enablement: true` on `actions/configure-pages`, which enables Pages on the
-  first run. If that is rejected, enable Pages manually:
-  Settings → Pages → Source = GitHub Actions.
+* GitHub Pages enablement (infrastructure-owned) is out of scope here.
 * Pull request is open against `main`; do not merge without user approval.
 
 ## Next steps
 
-1. Merge the PR (needs user approval).
-2. Confirm the first workflow run succeeds and Pages deploys.
-3. Run `python -m scripts.check_endpoints` to confirm the public URLs.
-4. Optional: wire the Ish Vaqti HTML app to `data/banks.json` (needs explicit
-   authorization; the app is currently untouched).
+1. Review the integration PR.
+2. Re-run the live source checks after the next upstream layout change.
+3. If a blocked bank publishes a public API later, add an adapter and move it
+   from `unavailable_reason` to a `Source`.
