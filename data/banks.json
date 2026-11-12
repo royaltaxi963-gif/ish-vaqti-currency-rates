@@ -1,8 +1,8 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-11-12T22:16:42+00:00",
+  "generated_at": "2026-11-12T22:55:55+00:00",
   "max_age_hours": 24,
-  "stale_after": "2026-11-13T22:16:42+00:00",
+  "stale_after": "2026-11-13T22:55:55+00:00",
   "supported_currencies": [
     "USD",
     "EUR",
@@ -14,7 +14,7 @@
     "cash",
     "mobile"
   ],
-  "notes": "Commercial bank buying/selling rates only. CBU reference rates are never substituted here; see data/cbu.json for official reference rates. Refuse to calculate with rates older than max_age_hours (see stale_after).",
+  "notes": "Commercial bank buying/selling rates only. CBU reference rates are never substituted here; see data/cbu.json for official reference rates. A bank's 'fresh' flag is true only when it publishes a rate whose source instant is within max_age_hours of generated_at; 'stale' is its complement for banks that publish rates. Refuse to calculate with rates older than max_age_hours (see stale_after).",
   "summary": {
     "banks_total": 14,
     "banks_with_rates": 14
@@ -26,6 +26,7 @@
       "status": "verified",
       "reason": null,
       "selected_source": "official",
+      "source_transition": null,
       "sources": [
         {
           "kind": "universalbank-api",
@@ -66,6 +67,7 @@
         }
       },
       "carried_forward": false,
+      "fresh": false,
       "stale": true
     },
     {
@@ -74,6 +76,7 @@
       "status": "verified",
       "reason": null,
       "selected_source": "official",
+      "source_transition": null,
       "sources": [
         {
           "kind": "davr-html",
@@ -119,6 +122,7 @@
         }
       },
       "carried_forward": false,
+      "fresh": false,
       "stale": true
     },
     {
@@ -127,6 +131,7 @@
       "status": "verified",
       "reason": "official source unavailable: asakabank.uz/uz/press-center/exchange-rates renders its rate table client-side and serves no rates; its API host back.asakabank.uz answers HTTP 403 to every path from the collector network, so no official rate source is reachable. Rate collected from bank.uz (https://bank.uz), a third-party aggregator used only as a fallback because the bank's official source is unavailable; bank.uz republishes the bank's own published cash rates.",
       "selected_source": "fallback",
+      "source_transition": null,
       "sources": [
         {
           "kind": "bankuz-html",
@@ -167,6 +172,7 @@
         }
       },
       "carried_forward": false,
+      "fresh": true,
       "stale": false
     },
     {
@@ -175,6 +181,7 @@
       "status": "verified",
       "reason": null,
       "selected_source": "official",
+      "source_transition": null,
       "sources": [
         {
           "kind": "trastbank-html",
@@ -215,6 +222,7 @@
         }
       },
       "carried_forward": false,
+      "fresh": true,
       "stale": false
     },
     {
@@ -223,6 +231,7 @@
       "status": "verified",
       "reason": null,
       "selected_source": "official",
+      "source_transition": null,
       "sources": [
         {
           "kind": "sqb-api",
@@ -287,6 +296,7 @@
         }
       },
       "carried_forward": false,
+      "fresh": false,
       "stale": false
     },
     {
@@ -295,6 +305,7 @@
       "status": "verified",
       "reason": null,
       "selected_source": "official",
+      "source_transition": null,
       "sources": [
         {
           "kind": "mkbank-json",
@@ -340,6 +351,7 @@
         }
       },
       "carried_forward": false,
+      "fresh": true,
       "stale": false
     },
     {
@@ -348,6 +360,7 @@
       "status": "verified",
       "reason": null,
       "selected_source": "official",
+      "source_transition": null,
       "sources": [
         {
           "kind": "ipakyuli-nuxt",
@@ -362,52 +375,53 @@
           "cash": {
             "buy": 11910.0,
             "sell": 12010.0,
-            "published_at": "2026-11-13T03:00:01+05:00"
+            "published_at": "2026-11-13T03:40:01+05:00"
           },
           "mobile": {
             "buy": 11915.0,
             "sell": 12005.0,
-            "published_at": "2026-11-13T03:00:01+05:00"
+            "published_at": "2026-11-13T03:40:01+05:00"
           }
         },
         "EUR": {
           "cash": {
             "buy": 12730.0,
             "sell": 13520.0,
-            "published_at": "2026-11-13T03:00:01+05:00"
+            "published_at": "2026-11-13T03:40:01+05:00"
           },
           "mobile": {
             "buy": 12730.0,
             "sell": 13520.0,
-            "published_at": "2026-11-13T03:00:01+05:00"
+            "published_at": "2026-11-13T03:40:01+05:00"
           }
         },
         "RUB": {
           "cash": {
             "buy": 80.0,
             "sell": 146.0,
-            "published_at": "2026-11-13T03:00:01+05:00"
+            "published_at": "2026-11-13T03:40:01+05:00"
           },
           "mobile": {
             "buy": 80.0,
             "sell": 146.0,
-            "published_at": "2026-11-13T03:00:01+05:00"
+            "published_at": "2026-11-13T03:40:01+05:00"
           }
         },
         "GBP": {
           "cash": {
             "buy": 15220.0,
             "sell": 16200.0,
-            "published_at": "2026-11-13T03:00:01+05:00"
+            "published_at": "2026-11-13T03:40:01+05:00"
           },
           "mobile": {
             "buy": 15220.0,
             "sell": 16200.0,
-            "published_at": "2026-11-13T03:00:01+05:00"
+            "published_at": "2026-11-13T03:40:01+05:00"
           }
         }
       },
       "carried_forward": false,
+      "fresh": true,
       "stale": false
     },
     {
@@ -416,6 +430,7 @@
       "status": "verified",
       "reason": "official source unavailable: official site nbu.uz (185.104.210.5, also www.nbu.uz) accepts no TCP connection on ports 80 or 443 from the collector network (TLS handshake and HTTP request both time out); no official rate source is reachable. Rate collected from bank.uz (https://bank.uz), a third-party aggregator used only as a fallback because the bank's official source is unavailable; bank.uz republishes the bank's own published cash rates.",
       "selected_source": "fallback",
+      "source_transition": null,
       "sources": [
         {
           "kind": "bankuz-html",
@@ -463,6 +478,7 @@
         }
       },
       "carried_forward": false,
+      "fresh": true,
       "stale": false
     },
     {
@@ -471,6 +487,7 @@
       "status": "verified",
       "reason": null,
       "selected_source": "official",
+      "source_transition": null,
       "sources": [
         {
           "kind": "ipoteka-html",
@@ -485,35 +502,36 @@
           "cash": {
             "buy": 11915.0,
             "sell": 12030.0,
-            "published_at": "2026-11-13T03:14:00+05:00"
+            "published_at": "2026-11-13T03:46:00+05:00"
           },
           "mobile": {
             "buy": 11965.0,
             "sell": 11985.0,
-            "published_at": "2026-11-13T03:14:00+05:00"
+            "published_at": "2026-11-13T03:46:00+05:00"
           }
         },
         "EUR": {
           "cash": {
             "buy": 12650.0,
             "sell": 13700.0,
-            "published_at": "2026-11-13T03:14:00+05:00"
+            "published_at": "2026-11-13T03:46:00+05:00"
           },
           "mobile": {
             "buy": 13125.0,
             "sell": 13395.0,
-            "published_at": "2026-11-13T03:14:00+05:00"
+            "published_at": "2026-11-13T03:46:00+05:00"
           }
         },
         "GBP": {
           "cash": {
             "buy": 13600.0,
             "sell": 17000.0,
-            "published_at": "2026-11-13T03:14:00+05:00"
+            "published_at": "2026-11-13T03:46:00+05:00"
           }
         }
       },
       "carried_forward": false,
+      "fresh": true,
       "stale": false
     },
     {
@@ -522,6 +540,7 @@
       "status": "verified",
       "reason": null,
       "selected_source": "official",
+      "source_transition": null,
       "sources": [
         {
           "kind": "brb-api",
@@ -543,37 +562,38 @@
           "cash": {
             "buy": 11945.0,
             "sell": 12030.0,
-            "published_at": "2026-11-13T03:16:02+05:00"
+            "published_at": "2026-11-13T03:55:02+05:00"
           },
           "mobile": {
             "buy": 11945.0,
             "sell": 12010.0,
-            "published_at": "2026-11-13T03:16:02+05:00"
+            "published_at": "2026-11-13T03:55:02+05:00"
           }
         },
         "EUR": {
           "cash": {
             "buy": 12900.0,
             "sell": 13600.0,
-            "published_at": "2026-11-13T03:16:02+05:00"
+            "published_at": "2026-11-13T03:55:02+05:00"
           }
         },
         "RUB": {
           "cash": {
             "buy": 50.0,
             "sell": 146.0,
-            "published_at": "2026-11-13T03:16:02+05:00"
+            "published_at": "2026-11-13T03:55:02+05:00"
           }
         },
         "GBP": {
           "cash": {
             "buy": 15500.0,
             "sell": 16200.0,
-            "published_at": "2026-11-13T03:16:02+05:00"
+            "published_at": "2026-11-13T03:55:02+05:00"
           }
         }
       },
       "carried_forward": false,
+      "fresh": true,
       "stale": false
     },
     {
@@ -582,6 +602,7 @@
       "status": "verified",
       "reason": null,
       "selected_source": "official",
+      "source_transition": null,
       "sources": [
         {
           "kind": "agrobank-api",
@@ -632,20 +653,25 @@
         }
       },
       "carried_forward": false,
+      "fresh": true,
       "stale": false
     },
     {
       "slug": "hamkorbank",
       "name": "Hamkorbank",
       "status": "verified",
-      "reason": "official source unavailable: https://api-dbo.hamkorbank.uz/webflow/v1/exchanges: HTTP Error 500: Internal Server Error. Rate collected from bank.uz (https://bank.uz), a third-party aggregator used only as a fallback because the bank's official source is unavailable; bank.uz republishes the bank's own published cash rates.",
-      "selected_source": "fallback",
+      "reason": null,
+      "selected_source": "official",
+      "source_transition": {
+        "from": "fallback",
+        "to": "official"
+      },
       "sources": [
         {
-          "kind": "bankuz-html",
-          "url": "https://bank.uz/uz/currency/bank/hamkorbank",
+          "kind": "hamkorbank-api",
+          "url": "https://api-dbo.hamkorbank.uz/webflow/v1/exchanges",
           "rate_type": "cash",
-          "source_type": "fallback",
+          "source_type": "official",
           "status": "ok"
         }
       ],
@@ -654,32 +680,38 @@
           "cash": {
             "buy": 11920.0,
             "sell": 12030.0,
-            "published_at": "2026-11-13T00:16:00+05:00"
+            "published_at": "2026-11-13T00:00:18+05:00"
+          },
+          "mobile": {
+            "buy": 11930.0,
+            "sell": 12020.0,
+            "published_at": "2026-11-13T00:00:18+05:00"
           }
         },
         "EUR": {
           "cash": {
             "buy": 12600.0,
             "sell": 13400.0,
-            "published_at": "2026-11-13T00:16:00+05:00"
+            "published_at": "2026-11-13T00:00:18+05:00"
           }
         },
         "RUB": {
           "cash": {
             "buy": 101.0,
             "sell": 145.0,
-            "published_at": "2026-11-13T00:16:00+05:00"
+            "published_at": "2026-11-13T00:00:18+05:00"
           }
         },
         "GBP": {
           "cash": {
             "buy": 15100.0,
             "sell": 16700.0,
-            "published_at": "2026-11-13T00:16:00+05:00"
+            "published_at": "2026-11-13T00:00:18+05:00"
           }
         }
       },
       "carried_forward": false,
+      "fresh": true,
       "stale": false
     },
     {
@@ -688,6 +720,7 @@
       "status": "verified",
       "reason": null,
       "selected_source": "official",
+      "source_transition": null,
       "sources": [
         {
           "kind": "xalq-api",
@@ -721,6 +754,7 @@
         }
       },
       "carried_forward": false,
+      "fresh": false,
       "stale": true
     },
     {
@@ -729,6 +763,7 @@
       "status": "verified",
       "reason": "official source unavailable: official site kapitalbank.uz answers HTTP 403 with a Cloudflare anti-bot challenge (\"Just a moment...\"); kapital24.uz redirects there and no public rate API host resolves, so access must not be bypassed and no official rate source is reachable. Rate collected from bank.uz (https://bank.uz), a third-party aggregator used only as a fallback because the bank's official source is unavailable; bank.uz republishes the bank's own published cash rates.",
       "selected_source": "fallback",
+      "source_transition": null,
       "sources": [
         {
           "kind": "bankuz-html",
@@ -776,6 +811,7 @@
         }
       },
       "carried_forward": false,
+      "fresh": true,
       "stale": false
     }
   ]

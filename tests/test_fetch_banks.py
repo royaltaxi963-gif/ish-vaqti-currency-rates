@@ -516,21 +516,33 @@ class PreservationTests(unittest.TestCase):
 
 
 class StaleDataTests(unittest.TestCase):
+    """Freshness is judged from real instants, never from string ordering."""
+
     def test_old_published_stamp_marks_bank_stale(self):
-        self.assertTrue(fetch_banks._bank_stale(
+        fresh, stale = fetch_banks._bank_freshness(
             {"USD": {"cash": {"buy": 1.0, "sell": 2.0, "published_at": "2026-11-10T08:00:00+05:00"}}},
             NOW,
-        ))
+        )
+        self.assertFalse(fresh)
+        self.assertTrue(stale)
 
-    def test_recent_published_stamp_is_not_stale(self):
-        self.assertFalse(fetch_banks._bank_stale(
+    def test_recent_published_stamp_is_fresh(self):
+        fresh, stale = fetch_banks._bank_freshness(
             {"USD": {"cash": {"buy": 1.0, "sell": 2.0, "published_at": "2026-11-13T00:00:00+05:00"}}},
             NOW,
-        ))
+        )
+        self.assertTrue(fresh)
+        self.assertFalse(stale)
 
-    def test_missing_stamp_is_not_flagged_stale(self):
-        self.assertFalse(fetch_banks._bank_stale(
-            {"USD": {"cash": {"buy": 1.0, "sell": 2.0, "published_at": None}}}, NOW))
+    def test_missing_stamp_is_not_flagged_fresh(self):
+        # No usable instant anywhere -> cannot be called fresh.
+        fresh, stale = fetch_banks._bank_freshness(
+            {"USD": {"cash": {"buy": 1.0, "sell": 2.0, "published_at": None}}}, NOW)
+        self.assertFalse(fresh)
+        self.assertFalse(stale)
+
+    def test_no_rates_is_neither_fresh_nor_stale(self):
+        self.assertEqual(fetch_banks._bank_freshness({}, NOW), (False, False))
 
 
 if __name__ == "__main__":

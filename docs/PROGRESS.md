@@ -2,10 +2,32 @@
 
 Durable state for resuming this work. Update after each verified increment.
 
-## Status: official + verified-fallback collection complete, 14/14 coverage
+## Status: official + verified-fallback collection complete; integrity sprint done
 
-Branch `feat/official-bank-sources`, PR #2. Last verified: 2026-11-13
-(Asia/Tashkent) with a live collection run reaching **14/14** banks.
+Branch `feat/official-bank-sources`, PR #2. Two verified increments:
+
+1. Official + verified-fallback collection, 14/14 coverage (2026-11-13).
+2. Data-integrity sprint fixing three reviewed defects — timestamp comparison,
+   mixed-source carry-forward, false freshness signals.
+
+## Data-integrity sprint (defects A/B/C)
+
+* **Defect A (timestamps).** Freshness is now decided from real instants, not
+  `max()` over ISO strings. `_parse_instant` normalises offset-aware stamps to
+  UTC; `_bank_freshness` classifies a bank as fresh / stale / unknown. Naive
+  (offset-less), malformed and future-dated stamps are treated as *unknown*, not
+  assumed to be UTC.
+* **Defect B (provenance).** Carry-forward never mixes source classes. A retained
+  rate is reused only when the previous and current runs used the same class, so
+  every published rate shares its entry's single `selected_source`. A class change
+  is recorded in the additive `source_transition` field and the other class's
+  rates are dropped rather than relabelled.
+* **Defect C (freshness).** `_has_fresh_rates` no longer equates "newly retrieved"
+  with "fresh"; it requires a source instant within `max_age_hours`. A successful
+  fetch of an outdated source cannot publish a fresh-looking dataset, and the run
+  keeps the previous file instead of refreshing `generated_at`.
+
+Regression tests: `tests/test_freshness_and_provenance.py` (38 tests).
 
 ## Done
 
@@ -36,13 +58,16 @@ Branch `feat/official-bank-sources`, PR #2. Last verified: 2026-11-13
 
 ## Verified evidence
 
-* `python -m unittest discover -s tests` → all pass (8 skipped live tests).
+* `python -m unittest discover -s tests` → 181 pass (8 skipped live tests).
+* `python -m unittest tests.test_freshness_and_provenance` → 38 pass.
 * `ISH_VAQTI_LIVE=1 python -m unittest tests.test_live_sources` → 8 passed;
   live collection reached **14/14** banks.
-* `python -m scripts.fetch_banks` → `verified rates for 14/14 banks`.
+* `python -m scripts.fetch_banks` → `verified rates for 14/14 banks (10 fresh)`.
 * `python -m scripts.validate_data` → `OK: 14/14 banks with rates`.
 * Dataset validates against `schemas/banks.schema.json` with `jsonschema`
   (draft 2020-12, `additionalProperties: false`).
+* Freshness split of the published dataset: 10 fresh, 3 stale (Universalbank,
+  Davr, Xalq — daily stamps older than 24h), 1 unknown (SQB publishes no stamp).
 * RUB is collected from every bank that publishes it (Trastbank, Ipak Yo'li,
   BRB, Xalq, Agrobank/SQB/Universalbank/MKBank sell-side, and the four
   fallback banks). KZT is now available for O'zmilliybank and Kapitalbank via

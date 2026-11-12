@@ -50,6 +50,18 @@ def validate_banks(path: Path = BANKS_FILE) -> dict:
             _fail(f"{slug}: unknown status {bank.get('status')!r}")
         if bank.get("selected_source") not in (None, "official", "fallback"):
             _fail(f"{slug}: unknown selected_source {bank.get('selected_source')!r}")
+        if bank.get("fresh") and bank.get("stale"):
+            _fail(f"{slug}: cannot be both fresh and stale")
+        if bank.get("fresh") and not bank.get("currencies"):
+            _fail(f"{slug}: fresh without rates")
+        transition = bank.get("source_transition")
+        if transition is not None and (
+            not isinstance(transition, dict)
+            or transition.get("from") not in ("official", "fallback")
+            or transition.get("to") not in ("official", "fallback")
+            or transition["from"] == transition["to"]
+        ):
+            _fail(f"{slug}: bad source_transition {transition!r}")
         if not bank.get("sources"):
             # A bank with no reachable source must say why it is empty.
             if bank.get("status") != "unavailable" or not bank.get("reason"):

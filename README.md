@@ -68,9 +68,11 @@ does not publish are simply absent from its `currencies` object.
       "name": "SQB",
       "status": "verified",           // verified | partial | stale | unavailable
       "stale": false,
+      "fresh": false,                 // true only if a source stamp is within max_age_hours
       "carried_forward": false,
       "reason": null,
       "selected_source": "official",  // official | fallback | null
+      "source_transition": null,      // {"from","to"} when the source class changed
       "sources": [
         { "kind": "sqb-api", "url": "https://sqb.uz/api/site-kurs-api/",
           "rate_type": "cash", "source_type": "official", "status": "ok" }
@@ -89,12 +91,25 @@ does not publish are simply absent from its `currencies` object.
 * `buy` / `sell` are UZS per 1 unit of the currency.
 * `published_at` is the source's own publication time, distinct from
   `generated_at` (the collection time). `null` when the source publishes none.
+* `fresh` / `stale` describe the source's own publication time, judged from the
+  real instant (offset-aware, normalised to UTC), never from string ordering:
+  `fresh` is true only when at least one rate was published within
+  `max_age_hours` of `generated_at`; `stale` is true when the bank publishes
+  rates whose known instants are all older than that. When no usable instant
+  exists (missing, malformed, offset-less or future-dated stamps) both are
+  `false`: freshness is *unknown* and is never reported as fresh. A successful
+  HTTP fetch of an outdated source is therefore not treated as fresh data.
 * `status: "stale"` means the bank could not be refreshed and its last verified
   rates are being served; `carried_forward: true` marks those rates.
 * `selected_source` says which source class produced the rates: `official` (the
   bank's own source), `fallback` (the verified `bank.uz` fallback) or `null`
   (unavailable). A `fallback` entry also carries a `reason` naming the official
   failure. Each `sources[]` entry carries the same distinction in `source_type`.
+  Carry-forward never mixes classes: a rate retained from the previous dataset is
+  reused only when the previous and current runs used the *same* class, so every
+  published rate shares its entry's single `selected_source`. A class change is
+  recorded in `source_transition` and the other class's rates are dropped, not
+  relabelled.
 * A failed refresh never overwrites the last verified dataset, and never
   publishes a dataset with no rates at all.
 
@@ -105,6 +120,23 @@ does not publish are simply absent from its `currencies` object.
 * If a refresh fails, or would publish no fresh rates, `data/banks.json` is left
   untouched.
 * Clients must refuse to calculate with rates older than `max_age_hours` (24).
+
+### Freshness policy
+
+A request succeeding is not proof of fresh data. The collector keeps the concepts
+separate: HTTP success, parse success, valid rates, *newly retrieved this run*,
+publication time known, and publication time within `max_age_hours`.
+
+* Freshness is decided from the source's own `published_at` instant, parsed and
+  normalised to UTC. ISO strings are never compared lexicographically.
+* A timestamp with no UTC offset is a bank's local wall-clock time; it is treated
+  as *unknown* rather than assumed to be UTC (assuming would shift the instant by
+  hours). Malformed and future-dated stamps are likewise unknown.
+* A rate whose publication time is unknown is never reported as `fresh`.
+* Carried-forward rates keep their original `published_at`; a run that only reuses
+  old data cannot refresh `generated_at`.
+* `generated_at`, `published_at`, `stale_after` and `max_age_hours` keep their
+  established meaning; `fresh` and `source_transition` are additive fields.
 
 ## Public endpoints
 
