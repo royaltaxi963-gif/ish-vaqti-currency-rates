@@ -62,7 +62,7 @@ def _fetch(url: str, attempts: int = RETRIES) -> str:
     raise CollectionError(f"{url}: {last}")
 
 
-def _source_entries(bank: Bank, source: Source, checked_at: datetime,
+def _source_entries(source: Source, checked_at: datetime,
                     cache: dict[str, str]) -> tuple[dict, list[dict]]:
     """Fetch, identity-check and parse one source (all of its sections).
 
@@ -131,7 +131,7 @@ def collect_bank(bank: Bank, checked_at: datetime) -> dict:
 
     for source in bank.sources:
         try:
-            parsed, entries = _source_entries(bank, source, checked_at, cache)
+            parsed, entries = _source_entries(source, checked_at, cache)
         except (CollectionError, OSError) as error:
             entries = [{
                 "kind": source.kind,
@@ -159,7 +159,7 @@ def collect_bank(bank: Bank, checked_at: datetime) -> dict:
     fallback_errors: list[str] = []
     if bank.fallback is not None:
         try:
-            parsed, entries = _source_entries(bank, bank.fallback, checked_at, cache)
+            parsed, entries = _source_entries(bank.fallback, checked_at, cache)
         except (CollectionError, OSError) as error:
             entries = [{
                 "kind": bank.fallback.kind,
