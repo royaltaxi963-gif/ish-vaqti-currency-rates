@@ -1,0 +1,719 @@
+{
+  "schema_version": 2,
+  "generated_at": "2026-11-12T16:53:43+00:00",
+  "max_age_hours": 24,
+  "stale_after": "2026-11-13T16:53:43+00:00",
+  "supported_currencies": [
+    "USD",
+    "EUR",
+    "RUB",
+    "KZT",
+    "GBP"
+  ],
+  "rate_types": [
+    "cash",
+    "mobile"
+  ],
+  "notes": "Commercial bank buying/selling rates only. CBU reference rates are never substituted here; see data/cbu.json for official reference rates. Refuse to calculate with rates older than max_age_hours (see stale_after).",
+  "summary": {
+    "banks_total": 14,
+    "banks_with_rates": 14
+  },
+  "banks": [
+    {
+      "slug": "universalbank",
+      "name": "Universalbank",
+      "status": "verified",
+      "reason": null,
+      "sources": [
+        {
+          "kind": "bankuz",
+          "url": "https://bank.uz/uz/currency/bank/universalbank",
+          "rate_type": "cash",
+          "status": "ok"
+        }
+      ],
+      "currencies": {
+        "USD": {
+          "cash": {
+            "buy": 11940.0,
+            "sell": 12020.0,
+            "published_at": "2026-11-12T21:36:00+05:00"
+          }
+        },
+        "EUR": {
+          "cash": {
+            "buy": 13000.0,
+            "sell": 15000.0,
+            "published_at": "2026-11-12T21:36:00+05:00"
+          }
+        },
+        "RUB": {
+          "cash": {
+            "buy": null,
+            "sell": 145.0,
+            "published_at": "2026-11-12T21:36:00+05:00"
+          }
+        },
+        "GBP": {
+          "cash": {
+            "buy": 15200.0,
+            "sell": 18000.0,
+            "published_at": "2026-11-12T21:36:00+05:00"
+          }
+        }
+      },
+      "carried_forward": false,
+      "stale": false
+    },
+    {
+      "slug": "davr-bank",
+      "name": "Davr Bank",
+      "status": "verified",
+      "reason": null,
+      "sources": [
+        {
+          "kind": "davr-html",
+          "url": "https://davrbank.uz/uz/exchange-rate",
+          "rate_type": "cash",
+          "status": "ok"
+        },
+        {
+          "kind": "davr-html",
+          "url": "https://davrbank.uz/uz/exchange-rate",
+          "rate_type": "mobile",
+          "status": "ok"
+        }
+      ],
+      "currencies": {
+        "USD": {
+          "cash": {
+            "buy": 11910.0,
+            "sell": 12020.0,
+            "published_at": "2026-11-12T00:00:00+05:00"
+          },
+          "mobile": {
+            "buy": 11920.0,
+            "sell": 12010.0,
+            "published_at": "2026-11-12T00:00:00+05:00"
+          }
+        },
+        "EUR": {
+          "cash": {
+            "buy": 12600.0,
+            "sell": 13400.0,
+            "published_at": "2026-11-12T00:00:00+05:00"
+          }
+        },
+        "GBP": {
+          "cash": {
+            "buy": 14050.0,
+            "sell": 16050.0,
+            "published_at": "2026-11-12T00:00:00+05:00"
+          }
+        }
+      },
+      "carried_forward": false,
+      "stale": false
+    },
+    {
+      "slug": "asaka-bank",
+      "name": "Asakabank",
+      "status": "verified",
+      "reason": null,
+      "sources": [
+        {
+          "kind": "bankuz",
+          "url": "https://bank.uz/uz/currency/bank/asaka-bank",
+          "rate_type": "cash",
+          "status": "ok"
+        }
+      ],
+      "currencies": {
+        "USD": {
+          "cash": {
+            "buy": 11950.0,
+            "sell": 11990.0,
+            "published_at": "2026-11-12T16:56:00+05:00"
+          }
+        },
+        "EUR": {
+          "cash": {
+            "buy": 12900.0,
+            "sell": 14000.0,
+            "published_at": "2026-11-12T16:56:00+05:00"
+          }
+        },
+        "RUB": {
+          "cash": {
+            "buy": null,
+            "sell": 145.0,
+            "published_at": "2026-11-12T16:56:00+05:00"
+          }
+        },
+        "GBP": {
+          "cash": {
+            "buy": 15350.0,
+            "sell": 16350.0,
+            "published_at": "2026-11-12T16:56:00+05:00"
+          }
+        }
+      },
+      "carried_forward": false,
+      "stale": false
+    },
+    {
+      "slug": "trastbank",
+      "name": "Trastbank",
+      "status": "verified",
+      "reason": null,
+      "sources": [
+        {
+          "kind": "bankuz",
+          "url": "https://bank.uz/uz/currency/bank/trastbank",
+          "rate_type": "cash",
+          "status": "ok"
+        }
+      ],
+      "currencies": {
+        "USD": {
+          "cash": {
+            "buy": 11920.0,
+            "sell": 12020.0,
+            "published_at": "2026-11-12T20:31:00+05:00"
+          }
+        },
+        "EUR": {
+          "cash": {
+            "buy": 12850.0,
+            "sell": 13400.0,
+            "published_at": "2026-11-12T20:31:00+05:00"
+          }
+        },
+        "RUB": {
+          "cash": {
+            "buy": 90.0,
+            "sell": 150.0,
+            "published_at": "2026-11-12T20:31:00+05:00"
+          }
+        },
+        "GBP": {
+          "cash": {
+            "buy": 15600.0,
+            "sell": 16250.0,
+            "published_at": "2026-11-12T20:31:00+05:00"
+          }
+        }
+      },
+      "carried_forward": false,
+      "stale": false
+    },
+    {
+      "slug": "sqb",
+      "name": "SQB",
+      "status": "verified",
+      "reason": null,
+      "sources": [
+        {
+          "kind": "sqb-api",
+          "url": "https://sqb.uz/api/site-kurs-api/",
+          "rate_type": "cash",
+          "status": "ok"
+        },
+        {
+          "kind": "sqb-api",
+          "url": "https://sqb.uz/api/site-kurs-api/",
+          "rate_type": "mobile",
+          "status": "ok"
+        },
+        {
+          "kind": "sqb-api",
+          "url": "https://sqb.uz/api/site-kurs-api/",
+          "rate_type": "mobile",
+          "status": "ok"
+        }
+      ],
+      "currencies": {
+        "USD": {
+          "cash": {
+            "buy": 11930.0,
+            "sell": 12020.0,
+            "published_at": null
+          },
+          "mobile": {
+            "buy": 11940.0,
+            "sell": 12010.0,
+            "published_at": null
+          }
+        },
+        "EUR": {
+          "cash": {
+            "buy": 13200.0,
+            "sell": 13600.0,
+            "published_at": null
+          },
+          "mobile": {
+            "buy": 13200.0,
+            "sell": 13600.0,
+            "published_at": null
+          }
+        },
+        "RUB": {
+          "cash": {
+            "buy": null,
+            "sell": 145.0,
+            "published_at": null
+          }
+        },
+        "GBP": {
+          "cash": {
+            "buy": 15600.0,
+            "sell": 16200.0,
+            "published_at": null
+          }
+        }
+      },
+      "carried_forward": false,
+      "stale": false
+    },
+    {
+      "slug": "mikrokreditbank",
+      "name": "Mikrokreditbank",
+      "status": "verified",
+      "reason": null,
+      "sources": [
+        {
+          "kind": "bankuz",
+          "url": "https://bank.uz/uz/currency/bank/mikrokreditbank",
+          "rate_type": "cash",
+          "status": "ok"
+        }
+      ],
+      "currencies": {
+        "USD": {
+          "cash": {
+            "buy": 11910.0,
+            "sell": 12020.0,
+            "published_at": "2026-11-12T21:36:00+05:00"
+          }
+        },
+        "EUR": {
+          "cash": {
+            "buy": 13000.0,
+            "sell": 13700.0,
+            "published_at": "2026-11-12T21:36:00+05:00"
+          }
+        },
+        "GBP": {
+          "cash": {
+            "buy": 15500.0,
+            "sell": 16500.0,
+            "published_at": "2026-11-12T21:36:00+05:00"
+          }
+        }
+      },
+      "carried_forward": false,
+      "stale": false
+    },
+    {
+      "slug": "ipakyulibank",
+      "name": "Ipak Yo‘li Bank",
+      "status": "verified",
+      "reason": null,
+      "sources": [
+        {
+          "kind": "bankuz",
+          "url": "https://bank.uz/uz/currency/bank/ipakyulibank",
+          "rate_type": "cash",
+          "status": "ok"
+        }
+      ],
+      "currencies": {
+        "USD": {
+          "cash": {
+            "buy": 11910.0,
+            "sell": 12010.0,
+            "published_at": "2026-11-12T20:31:00+05:00"
+          }
+        },
+        "EUR": {
+          "cash": {
+            "buy": 12730.0,
+            "sell": 13520.0,
+            "published_at": "2026-11-12T20:31:00+05:00"
+          }
+        },
+        "RUB": {
+          "cash": {
+            "buy": 80.0,
+            "sell": 146.0,
+            "published_at": "2026-11-12T20:31:00+05:00"
+          }
+        },
+        "GBP": {
+          "cash": {
+            "buy": 15220.0,
+            "sell": 16200.0,
+            "published_at": "2026-11-12T20:31:00+05:00"
+          }
+        }
+      },
+      "carried_forward": false,
+      "stale": false
+    },
+    {
+      "slug": "nbu",
+      "name": "O‘zmilliybank",
+      "status": "verified",
+      "reason": null,
+      "sources": [
+        {
+          "kind": "bankuz",
+          "url": "https://bank.uz/uz/currency/bank/nbu",
+          "rate_type": "cash",
+          "status": "ok"
+        }
+      ],
+      "currencies": {
+        "USD": {
+          "cash": {
+            "buy": 11940.0,
+            "sell": 12020.0,
+            "published_at": "2026-11-12T20:31:00+05:00"
+          }
+        },
+        "EUR": {
+          "cash": {
+            "buy": 13130.0,
+            "sell": 13340.0,
+            "published_at": "2026-11-12T20:31:00+05:00"
+          }
+        },
+        "RUB": {
+          "cash": {
+            "buy": 115.0,
+            "sell": 150.0,
+            "published_at": "2026-11-12T20:31:00+05:00"
+          }
+        },
+        "KZT": {
+          "cash": {
+            "buy": 16.0,
+            "sell": 27.0,
+            "published_at": "2026-11-12T20:31:00+05:00"
+          }
+        },
+        "GBP": {
+          "cash": {
+            "buy": 15690.0,
+            "sell": 16150.0,
+            "published_at": "2026-11-12T20:31:00+05:00"
+          }
+        }
+      },
+      "carried_forward": false,
+      "stale": false
+    },
+    {
+      "slug": "ipoteka-bank",
+      "name": "Ipoteka-bank",
+      "status": "verified",
+      "reason": null,
+      "sources": [
+        {
+          "kind": "bankuz",
+          "url": "https://bank.uz/uz/currency/bank/ipoteka-bank",
+          "rate_type": "cash",
+          "status": "ok"
+        }
+      ],
+      "currencies": {
+        "USD": {
+          "cash": {
+            "buy": 11905.0,
+            "sell": 12020.0,
+            "published_at": "2026-11-12T20:31:00+05:00"
+          }
+        },
+        "EUR": {
+          "cash": {
+            "buy": 12700.0,
+            "sell": 13750.0,
+            "published_at": "2026-11-12T20:31:00+05:00"
+          }
+        },
+        "RUB": {
+          "cash": {
+            "buy": 50.0,
+            "sell": 150.0,
+            "published_at": "2026-11-12T20:31:00+05:00"
+          }
+        },
+        "GBP": {
+          "cash": {
+            "buy": 13650.0,
+            "sell": 17050.0,
+            "published_at": "2026-11-12T20:31:00+05:00"
+          }
+        }
+      },
+      "carried_forward": false,
+      "stale": false
+    },
+    {
+      "slug": "brb",
+      "name": "Biznesni rivojlantirish banki (BRB)",
+      "status": "verified",
+      "reason": null,
+      "sources": [
+        {
+          "kind": "brb-api",
+          "url": "https://brb.uz/api/currency/compare?type=jismoniy",
+          "rate_type": "cash",
+          "status": "ok"
+        },
+        {
+          "kind": "brb-api",
+          "url": "https://brb.uz/api/currency/compare?type=jismoniy",
+          "rate_type": "mobile",
+          "status": "ok"
+        }
+      ],
+      "currencies": {
+        "USD": {
+          "cash": {
+            "buy": 11945.0,
+            "sell": 12030.0,
+            "published_at": "2026-11-12T21:53:02+05:00"
+          },
+          "mobile": {
+            "buy": 11945.0,
+            "sell": 12010.0,
+            "published_at": "2026-11-12T21:53:02+05:00"
+          }
+        },
+        "EUR": {
+          "cash": {
+            "buy": 12900.0,
+            "sell": 13600.0,
+            "published_at": "2026-11-12T21:53:02+05:00"
+          }
+        },
+        "RUB": {
+          "cash": {
+            "buy": 50.0,
+            "sell": 146.0,
+            "published_at": "2026-11-12T21:53:02+05:00"
+          }
+        },
+        "GBP": {
+          "cash": {
+            "buy": 15500.0,
+            "sell": 16200.0,
+            "published_at": "2026-11-12T21:53:02+05:00"
+          }
+        }
+      },
+      "carried_forward": false,
+      "stale": false
+    },
+    {
+      "slug": "agrobank",
+      "name": "Agrobank",
+      "status": "verified",
+      "reason": null,
+      "sources": [
+        {
+          "kind": "bankuz",
+          "url": "https://bank.uz/uz/currency/bank/agrobank",
+          "rate_type": "cash",
+          "status": "ok"
+        }
+      ],
+      "currencies": {
+        "USD": {
+          "cash": {
+            "buy": 11920.0,
+            "sell": 12010.0,
+            "published_at": "2026-11-12T21:36:00+05:00"
+          }
+        },
+        "EUR": {
+          "cash": {
+            "buy": 13050.0,
+            "sell": 13550.0,
+            "published_at": "2026-11-12T21:36:00+05:00"
+          }
+        },
+        "RUB": {
+          "cash": {
+            "buy": null,
+            "sell": 180.0,
+            "published_at": "2026-11-12T21:36:00+05:00"
+          }
+        },
+        "GBP": {
+          "cash": {
+            "buy": 15200.0,
+            "sell": 16300.0,
+            "published_at": "2026-11-12T21:36:00+05:00"
+          }
+        }
+      },
+      "carried_forward": false,
+      "stale": false
+    },
+    {
+      "slug": "hamkorbank",
+      "name": "Hamkorbank",
+      "status": "verified",
+      "reason": null,
+      "sources": [
+        {
+          "kind": "bankuz",
+          "url": "https://bank.uz/uz/currency/bank/hamkorbank",
+          "rate_type": "cash",
+          "status": "ok"
+        }
+      ],
+      "currencies": {
+        "USD": {
+          "cash": {
+            "buy": 11910.0,
+            "sell": 12020.0,
+            "published_at": "2026-11-12T21:36:00+05:00"
+          }
+        },
+        "EUR": {
+          "cash": {
+            "buy": 12700.0,
+            "sell": 13400.0,
+            "published_at": "2026-11-12T21:36:00+05:00"
+          }
+        },
+        "RUB": {
+          "cash": {
+            "buy": 101.0,
+            "sell": 145.0,
+            "published_at": "2026-11-12T21:36:00+05:00"
+          }
+        },
+        "GBP": {
+          "cash": {
+            "buy": 15100.0,
+            "sell": 16700.0,
+            "published_at": "2026-11-12T21:36:00+05:00"
+          }
+        }
+      },
+      "carried_forward": false,
+      "stale": false
+    },
+    {
+      "slug": "xalq-bank",
+      "name": "Xalq banki",
+      "status": "verified",
+      "reason": null,
+      "sources": [
+        {
+          "kind": "bankuz",
+          "url": "https://bank.uz/uz/currency/bank/xalq-bank",
+          "rate_type": "cash",
+          "status": "ok"
+        }
+      ],
+      "currencies": {
+        "USD": {
+          "cash": {
+            "buy": 11910.0,
+            "sell": 12000.0,
+            "published_at": "2026-11-12T21:36:00+05:00"
+          }
+        },
+        "EUR": {
+          "cash": {
+            "buy": 12500.0,
+            "sell": 13400.0,
+            "published_at": "2026-11-12T21:36:00+05:00"
+          }
+        },
+        "RUB": {
+          "cash": {
+            "buy": 50.0,
+            "sell": 145.0,
+            "published_at": "2026-11-12T21:36:00+05:00"
+          }
+        },
+        "KZT": {
+          "cash": {
+            "buy": 15.0,
+            "sell": 27.0,
+            "published_at": "2026-11-12T21:36:00+05:00"
+          }
+        },
+        "GBP": {
+          "cash": {
+            "buy": 13000.0,
+            "sell": 19000.0,
+            "published_at": "2026-11-12T21:36:00+05:00"
+          }
+        }
+      },
+      "carried_forward": false,
+      "stale": false
+    },
+    {
+      "slug": "kapitalbank",
+      "name": "Kapitalbank",
+      "status": "verified",
+      "reason": null,
+      "sources": [
+        {
+          "kind": "bankuz",
+          "url": "https://bank.uz/uz/currency/bank/kapitalbank",
+          "rate_type": "cash",
+          "status": "ok"
+        }
+      ],
+      "currencies": {
+        "USD": {
+          "cash": {
+            "buy": 11950.0,
+            "sell": 12030.0,
+            "published_at": "2026-11-12T20:01:00+05:00"
+          }
+        },
+        "EUR": {
+          "cash": {
+            "buy": 12920.0,
+            "sell": 13420.0,
+            "published_at": "2026-11-12T20:01:00+05:00"
+          }
+        },
+        "RUB": {
+          "cash": {
+            "buy": 116.0,
+            "sell": 141.0,
+            "published_at": "2026-11-12T20:01:00+05:00"
+          }
+        },
+        "KZT": {
+          "cash": {
+            "buy": 25.0,
+            "sell": 28.0,
+            "published_at": "2026-11-12T20:01:00+05:00"
+          }
+        },
+        "GBP": {
+          "cash": {
+            "buy": 15320.0,
+            "sell": 16490.0,
+            "published_at": "2026-11-12T20:01:00+05:00"
+          }
+        }
+      },
+      "carried_forward": false,
+      "stale": false
+    }
+  ]
+}

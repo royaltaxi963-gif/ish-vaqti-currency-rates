@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ish Vaqti — bank valyuta kurslari</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Bank valyuta kurslari</h1>
+    <p class="subtitle">
+      14 ta tijorat bankining e'lon qilingan <strong>sotib olish</strong> va
+      <strong>sotish</strong> kurslari. Markaziy bank kurslari bu yerda
+      ishlatilmaydi (ular <code>data/cbu.json</code> da).
+    </p>
+    <p id="meta" class="meta">Yuklanmoqda…</p>
+    <p id="stale-warning" class="warning" hidden></p>
+  </header>
+
+  <main>
+    <div class="controls">
+      <label for="currency">Valyuta</label>
+      <select id="currency"></select>
+      <label for="rate-type">Kurs turi</label>
+      <select id="rate-type">
+        <option value="cash">Naqd (filial)</option>
+        <option value="mobile">Mobil / karta</option>
+      </select>
+    </div>
+
+    <table id="rates">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Bank</th>
+          <th>Sotib olish</th>
+          <th>Sotish</th>
+          <th>Holat</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <p class="footnote">
+      Kurslar banklarning rasmiy manbalaridan olinadi. Bo'sh katak — bank bu
+      kursni e'lon qilmagan. <span id="generated"></span>
+    </p>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

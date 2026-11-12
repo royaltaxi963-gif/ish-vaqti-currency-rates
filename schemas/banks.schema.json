@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/royaltaxi963-gif/ish-vaqti-currency-rates/main/schemas/banks.schema.json",
+  "title": "Ish Vaqti commercial bank exchange rates",
+  "description": "Buying/selling rates genuinely published by the 14 supported commercial banks. CBU reference rates are never substituted for these values.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "generated_at",
+    "max_age_hours",
+    "stale_after",
+    "supported_currencies",
+    "rate_types",
+    "summary",
+    "banks"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Collection timestamp (UTC, ISO 8601)."
+    },
+    "max_age_hours": {
+      "type": "integer",
+      "const": 24,
+      "description": "Clients must not calculate with rates older than this many hours."
+    },
+    "stale_after": {
+      "type": "string",
+      "format": "date-time",
+      "description": "generated_at + max_age_hours; after this instant the dataset is stale."
+    },
+    "supported_currencies": {
+      "type": "array",
+      "items": { "enum": ["USD", "EUR", "RUB", "KZT", "GBP"] },
+      "uniqueItems": true
+    },
+    "rate_types": {
+      "type": "array",
+      "items": { "enum": ["cash", "mobile"] },
+      "description": "cash = branch/over-the-counter, mobile = mobile app or ATM."
+    },
+    "notes": { "type": "string" },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["banks_total", "banks_with_rates"],
+      "properties": {
+        "banks_total": { "const": 14 },
+        "banks_with_rates": { "type": "integer", "minimum": 0, "maximum": 14 }
+      }
+    },
+    "banks": {
+      "type": "array",
+      "minItems": 14,
+      "maxItems": 14,
+      "items": { "$ref": "#/$defs/bank" }
+    }
+  },
+  "$defs": {
+    "bank": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["slug", "name", "status", "currencies", "sources", "stale", "carried_forward"],
+      "properties": {
+        "slug": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["verified", "partial", "stale", "unavailable"] },
+        "reason": { "type": ["string", "null"] },
+        "stale": {
+          "type": "boolean",
+          "description": "True when every published timestamp is older than max_age_hours."
+        },
+        "carried_forward": {
+          "type": "boolean",
+          "description": "True when some rates were retained from the previous verified dataset."
+        },
+        "sources": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/source" }
+        },
+        "currencies": {
+          "type": "object",
+          "propertyNames": { "enum": ["USD", "EUR", "RUB", "KZT", "GBP"] },
+          "additionalProperties": { "$ref": "#/$defs/currency" }
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["kind", "url", "status"],
+      "properties": {
+        "kind": { "type": "string" },
+        "url": { "type": "string", "format": "uri" },
+        "rate_type": { "enum": ["cash", "mobile"] },
+        "status": { "enum": ["ok", "error"] },
+        "error": { "type": "string" }
+      }
+    },
+    "currency": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cash": { "$ref": "#/$defs/rate" },
+        "mobile": { "$ref": "#/$defs/rate" }
+      },
+      "minProperties": 1
+    },
+    "rate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["buy", "sell"],
+      "properties": {
+        "buy": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "Bank buying price in UZS per 1 unit. null when not published."
+        },
+        "sell": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "Bank selling price in UZS per 1 unit. null when not published."
+        },
+        "published_at": {
+          "type": ["string", "null"],
+          "format": "date-time",
+          "description": "Source publication timestamp, distinct from generated_at."
+        }
+      }
+    }
+  }
+}

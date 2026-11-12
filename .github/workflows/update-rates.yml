@@ -1,33 +1,102 @@
-name: Update verified CBU rates
+name: Update verified rates
+
+# Asia/Tashkent 09:00, 12:00, 15:00, 18:00. GitHub Actions scheduled runs are
+# best-effort: they can be delayed or skipped under load, so treat the schedule
+# as a target, not a guarantee.
 on:
   workflow_dispatch:
   schedule:
-    # Asia/Tashkent 09:00, 12:00, 15:00, 18:00
     - cron: '0 4,7,10,13 * * *'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/**'
+      - 'tests/**'
+      - 'schemas/**'
+      - '.github/workflows/update-rates.yml'
+
 permissions:
   contents: write
+
 concurrency:
   group: currency-update
   cancel-in-progress: false
+
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Validate parser
+
+      - name: Unit tests (offline)
         run: python -m unittest discover -s tests -v
-      - name: Fetch verified official rates
+
+      - name: Live source checks (all 14 banks)
+        continue-on-error: true
+        env:
+          ISH_VAQTI_LIVE: '1'
+        run: python -m unittest tests.test_live_sources -v
+
+      - name: Fetch official CBU reference rates
         run: python -m scripts.fetch_cbu
+
+      - name: Fetch verified commercial bank rates
+        run: python -m scripts.fetch_banks
+
+      - name: Validate published datasets against the schema
+        run: python -m scripts.validate_data
+
       - name: Commit verified data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/cbu.json
+          git add data/cbu.json data/banks.json
           if ! git diff --cached --quiet; then
-            git commit -m "data: refresh verified CBU reference rates"
+            git commit -m "data: refresh verified CBU and bank rates"
             git push
+          else
+            echo "no data changes to commit"
           fi
+
+      - name: Build static site bundle
+        run: python -m scripts.build_site
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: update
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Configure Pages
+        id: pages
+        uses: actions/configure-pages@v5
+        with:
+          # Enables Pages with the GitHub Actions source on first run. This needs
+          # a token that can create the Pages site; if it is rejected, enable
+          # Pages once by hand: Settings -> Pages -> Source = GitHub Actions.
+          enablement: true
+        continue-on-error: true
+
+      - name: Explain Pages setup when unavailable
+        if: steps.pages.outcome == 'failure'
+        run: |
+          echo "::warning title=Pages not enabled::Enable Pages once: Settings -> Pages -> Source = GitHub Actions. The JSON data is already committed and served from raw.githubusercontent.com and jsDelivr."
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        if: steps.pages.outcome == 'success'
+        uses: actions/deploy-pages@v4
