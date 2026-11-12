@@ -10,6 +10,7 @@ from scripts.bank_parsers import (
     parse_brb,
     parse_davr,
     parse_source,
+    parse_mkbank_json,
     parse_sqb,
 )
 
@@ -136,6 +137,27 @@ class DavrTests(unittest.TestCase):
     def test_layout_change_raises(self):
         with self.assertRaises(LayoutError):
             parse_davr("<html>nothing</html>", ("Bank ofislarida valyutalar kursi",), NOW)
+
+
+class MkbankTests(unittest.TestCase):
+    def test_rub_sell_without_buy(self):
+        rates = parse_mkbank_json([{"G1": "2026-11-12 09:00:00",
+                                    "G2": "BANK", "G3": "RUB",
+                                    "G4": "", "G5": "155"}])
+        self.assertIsNone(rates["RUB"]["cash"]["buy"])
+        self.assertEqual(rates["RUB"]["cash"]["sell"], 155.0)
+
+    def test_mobile_separated_and_reference_rate_not_used(self):
+        rates = parse_mkbank_json({"data": [
+            {"G2": "APP", "G3": "USD", "G4": "11900", "G5": "12000"},
+            {"G2": "BANK", "G3": "RUB", "G4": None, "G5": "155"},
+            {"G2": "OTHER", "G3": "RUB", "G4": "145", "G5": "145"}]})
+        self.assertEqual(rates["USD"]["mobile"]["sell"], 12000.0)
+        self.assertEqual(rates["RUB"]["cash"]["sell"], 155.0)
+
+    def test_unexpected_structure_fails_closed(self):
+        with self.assertRaises(LayoutError):
+            parse_mkbank_json({"unknown": "layout"})
 
 
 class DispatchTests(unittest.TestCase):
