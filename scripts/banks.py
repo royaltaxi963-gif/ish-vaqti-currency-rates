@@ -85,7 +85,7 @@ BANKS: tuple[Bank, ...] = (
             ),
         ),
     ),
-    Bank("mikrokreditbank", "Mikrokreditbank", (_bankuz("mikrokreditbank"),)),
+    Bank("mikrokreditbank", "Mikrokreditbank", (_bankuz("mikrokreditbank"), Source(kind="mkbank-json", url="https://mkbank.uz/uz/services/open_data/rates/json/", kind_label="cash"))),
     Bank("ipakyulibank", "Ipak Yo\u2018li Bank", (_bankuz("ipakyulibank"),)),
     Bank("nbu", "O\u2018zmilliybank", (_bankuz("nbu"),)),
     Bank("ipoteka-bank", "Ipoteka-bank", (_bankuz("ipoteka-bank"),)),
