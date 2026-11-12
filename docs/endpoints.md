@@ -46,3 +46,18 @@ python -m scripts.check_endpoints
 
 The command probes the endpoints above and prints their status. It is
 best-effort and needs outbound network access.
+
+## Enabling GitHub Pages (one-time, repository owner)
+
+The workflow tries to enable Pages automatically (`enablement: true`). A token
+without Pages-admin rights cannot create the Pages site, in which case the
+deploy job warns and skips instead of failing the run — the JSON is still
+committed and served by the fallbacks above.
+
+To turn Pages on once, as the repository owner:
+
+1. Open **Settings → Pages**.
+2. Set **Source** to **GitHub Actions**.
+3. Re-run the *Update verified rates* workflow (or push to `main`).
+
+After that the Pages endpoint returns `200`.
