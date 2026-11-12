@@ -1,0 +1,33 @@
+name: Update verified CBU rates
+on:
+  workflow_dispatch:
+  schedule:
+    # Asia/Tashkent 09:00, 12:00, 15:00, 18:00
+    - cron: '0 4,7,10,13 * * *'
+permissions:
+  contents: write
+concurrency:
+  group: currency-update
+  cancel-in-progress: false
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate parser
+        run: python -m unittest discover -s tests -v
+      - name: Fetch verified official rates
+        run: python -m scripts.fetch_cbu
+      - name: Commit verified data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/cbu.json
+          if ! git diff --cached --quiet; then
+            git commit -m "data: refresh verified CBU reference rates"
+            git push
+          fi
