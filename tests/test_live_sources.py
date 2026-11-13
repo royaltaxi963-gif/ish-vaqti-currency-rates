@@ -1,4 +1,4 @@
-"""Opt-in live-source checks against the real upstream pages.
+"""Opt-in live-source checks against the real official bank endpoints.
 
 These hit the network, so they are skipped unless ``ISH_VAQTI_LIVE=1`` is set.
 They exist to prove the collectors still match the real sources; unit tests
@@ -15,6 +15,14 @@ from scripts.fetch_banks import collect_bank
 
 LIVE = os.environ.get("ISH_VAQTI_LIVE") == "1"
 
+# Banks whose own official source is reachable and must return rates.
+EXPECTED_UP = {
+    "universalbank", "davr-bank", "trastbank", "sqb", "mikrokreditbank",
+    "ipakyulibank", "ipoteka-bank", "brb", "agrobank", "xalq-bank",
+}
+# Banks that rely on their verified fallback when the official source is down.
+FALLBACK_BANKS = {"asaka-bank", "nbu", "hamkorbank", "kapitalbank"}
+
 
 @unittest.skipUnless(LIVE, "set ISH_VAQTI_LIVE=1 to run live source checks")
 class LiveSourceTests(unittest.TestCase):
@@ -23,22 +31,59 @@ class LiveSourceTests(unittest.TestCase):
         cls.now = datetime.now(timezone.utc)
         cls.results = {bank.slug: collect_bank(bank, cls.now) for bank in BANKS}
 
-    def test_reports_reachability(self):
-        reachable = [s for s, r in self.results.items() if r["currencies"]]
+    def test_expected_banks_return_rates(self):
+        reachable = {s for s, r in self.results.items() if r["currencies"]}
+        missing = EXPECTED_UP - reachable
         print(f"\nlive: {len(reachable)}/{len(BANKS)} banks returned rates: {sorted(reachable)}")
-        self.assertGreaterEqual(len(reachable), 1, "no bank returned any rate")
+        self.assertFalse(missing, f"expected rates from {sorted(missing)}")
+
+    def test_fallback_banks_return_rates_or_a_reason(self):
+        # Every fallback bank must either return rates (with provenance) or be
+        # reported unavailable with an explicit reason; never silently empty.
+        for slug in FALLBACK_BANKS:
+            result = self.results[slug]
+            if result["currencies"]:
+                self.assertIn(result["selected_source"], {"official", "fallback"})
+                self.assertTrue(any(s.get("source_type") in {"official", "fallback"}
+                                    for s in result["sources"]))
+            else:
+                self.assertTrue(result["reason"], f"{slug} is empty without a reason")
 
     def test_no_unsupported_currencies(self):
         for slug, result in self.results.items():
             for code in result["currencies"]:
                 self.assertIn(code, SUPPORTED_CURRENCIES, f"{slug} returned {code}")
 
-    def test_every_rate_has_a_source_and_timestamp_policy(self):
+    def test_every_rate_has_a_source(self):
         for slug, result in self.results.items():
-            if not result["currencies"]:
-                self.assertTrue(result["reason"], f"{slug} unavailable without a reason")
-            else:
+            if result["currencies"]:
                 self.assertTrue(result["sources"], f"{slug} has rates but no sources")
+
+    def test_fallback_rates_always_carry_a_publication_timestamp(self):
+        # bank.uz publishes a "Yangilanish vaqti" stamp per row, so a fallback
+        # rate must always have one; an official API that omits the field is a
+        # documented source limitation, not a parser failure.
+        for slug in FALLBACK_BANKS:
+            result = self.results[slug]
+            for code, kinds in result["currencies"].items():
+                for kind, payload in kinds.items():
+                    self.assertIsNotNone(
+                        payload.get("published_at"),
+                        f"{slug} {code}/{kind} (fallback) has no publication timestamp",
+                    )
+
+    def test_present_timestamps_are_well_formed(self):
+        for slug, result in self.results.items():
+            for code, kinds in result["currencies"].items():
+                for kind, payload in kinds.items():
+                    stamp = payload.get("published_at")
+                    if stamp is not None:
+                        datetime.fromisoformat(stamp)
+
+    def test_rub_collected_where_published(self):
+        # These banks publish RUB on their official page; the adapter must return it.
+        for slug in ("trastbank", "ipakyulibank", "brb", "xalq-bank"):
+            self.assertIn("RUB", self.results[slug]["currencies"], f"{slug} lost RUB")
 
     def test_buy_and_sell_are_distinct_when_both_present(self):
         for slug, result in self.results.items():

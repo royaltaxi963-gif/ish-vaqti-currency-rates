@@ -62,6 +62,25 @@ class ValidateDataTests(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 validate_data.validate_banks(path)
 
+    def test_fresh_and_stale_together_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            data = json.loads((DATA / "banks.json").read_text(encoding="utf-8"))
+            data["banks"][0]["fresh"] = True
+            data["banks"][0]["stale"] = True
+            path = Path(tmp) / "banks.json"
+            path.write_text(json.dumps(data), encoding="utf-8")
+            with self.assertRaises(SystemExit):
+                validate_data.validate_banks(path)
+
+    def test_bad_source_transition_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            data = json.loads((DATA / "banks.json").read_text(encoding="utf-8"))
+            data["banks"][0]["source_transition"] = {"from": "official", "to": "official"}
+            path = Path(tmp) / "banks.json"
+            path.write_text(json.dumps(data), encoding="utf-8")
+            with self.assertRaises(SystemExit):
+                validate_data.validate_banks(path)
+
 
 class BuildSiteTests(unittest.TestCase):
     def test_build_produces_expected_files(self):

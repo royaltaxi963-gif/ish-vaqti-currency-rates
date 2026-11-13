@@ -63,15 +63,34 @@
     "bank": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["slug", "name", "status", "currencies", "sources", "stale", "carried_forward"],
+      "required": ["slug", "name", "status", "currencies", "sources", "fresh", "stale", "carried_forward"],
       "properties": {
         "slug": { "type": "string", "minLength": 1 },
         "name": { "type": "string", "minLength": 1 },
         "status": { "enum": ["verified", "partial", "stale", "unavailable"] },
         "reason": { "type": ["string", "null"] },
+        "selected_source": {
+          "type": ["string", "null"],
+          "enum": ["official", "fallback", null],
+          "description": "Which source class produced the published rates: the bank's own official source, a verified third-party fallback, or null when the bank is unavailable."
+        },
+        "source_transition": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": ["from", "to"],
+          "properties": {
+            "from": { "enum": ["official", "fallback"] },
+            "to": { "enum": ["official", "fallback"] }
+          },
+          "description": "Set when this run's source class differs from the previous dataset's; carried-forward rates from the other class are dropped, never relabelled."
+        },
+        "fresh": {
+          "type": "boolean",
+          "description": "True only when the bank publishes a rate whose source instant is within max_age_hours of generated_at. A successful fetch of an outdated source is not fresh."
+        },
         "stale": {
           "type": "boolean",
-          "description": "True when every published timestamp is older than max_age_hours."
+          "description": "True when the bank publishes rates but none is fresh (all known instants are older than max_age_hours, or none carries a usable instant)."
         },
         "carried_forward": {
           "type": "boolean",
@@ -96,6 +115,10 @@
         "kind": { "type": "string" },
         "url": { "type": "string", "format": "uri" },
         "rate_type": { "enum": ["cash", "mobile"] },
+        "source_type": {
+          "enum": ["official", "fallback"],
+          "description": "official for the bank's own source, fallback for the verified bank.uz aggregator."
+        },
         "status": { "enum": ["ok", "error"] },
         "error": { "type": "string" }
       }
@@ -127,7 +150,7 @@
         "published_at": {
           "type": ["string", "null"],
           "format": "date-time",
-          "description": "Source publication timestamp, distinct from generated_at."
+          "description": "Source publication timestamp, distinct from generated_at. null when the source publishes none; such a rate is neither fresh nor stale (freshness unknown)."
         }
       }
     }

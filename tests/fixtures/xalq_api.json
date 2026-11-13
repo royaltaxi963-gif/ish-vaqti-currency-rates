@@ -1,0 +1,107 @@
+{
+  "840": {
+    "files": [
+      {
+        "id": 5294,
+        "fileable_type": "xbsoft\\external\\models\\Currency",
+        "fileable_id": 6,
+        "title": "emojione_flag-for-united-states.png",
+        "description": "emojione_flag-for-united-states.png",
+        "extension": "png",
+        "src": "/uploads/2021/06/14/12/08/6VJOPPskppR6pCYmVvk32tnr2q8w0KcFMYEI0iamff3sXMHDIevjOkndPWnH5o-p.png",
+        "size": 1249,
+        "type": null,
+        "host_number": null,
+        "lang_id": 3,
+        "sort": null,
+        "status": 1,
+        "created_at": 1623672523,
+        "updated_at": 1623672523
+      }
+    ],
+    "data": {
+      "12-11-2026": {
+        "selling": "12000",
+        "buying": "11910"
+      },
+      "11-11-2026": {
+        "selling": "12000",
+        "buying": "11920"
+      },
+      "10-11-2026": {
+        "selling": "12030",
+        "buying": "11900"
+      }
+    }
+  },
+  "643": {
+    "files": [
+      {
+        "id": 5295,
+        "fileable_type": "xbsoft\\external\\models\\Currency",
+        "fileable_id": 3,
+        "title": "emojione_flag-for-russia.png",
+        "description": "emojione_flag-for-russia.png",
+        "extension": "png",
+        "src": "/uploads/2021/06/14/12/08/K9ag5eixyjtydw5SwBOYOCarrcbtVg1UM0sRsWECGy4fYZ5ra2SP8ianKePVS4bi.png",
+        "size": 744,
+        "type": null,
+        "host_number": null,
+        "lang_id": 3,
+        "sort": null,
+        "status": 1,
+        "created_at": 1623672529,
+        "updated_at": 1623672529
+      }
+    ],
+    "data": {
+      "12-11-2026": {
+        "selling": "147.1",
+        "buying": "142.45"
+      },
+      "11-11-2026": {
+        "selling": "145",
+        "buying": "50"
+      },
+      "10-11-2026": {
+        "selling": "146",
+        "buying": "50"
+      }
+    }
+  },
+  "978": {
+    "files": [
+      {
+        "id": 5296,
+        "fileable_type": "xbsoft\\external\\models\\Currency",
+        "fileable_id": 7,
+        "title": "emojione_flag-for-european-union.png",
+        "description": "emojione_flag-for-european-union.png",
+        "extension": "png",
+        "src": "/uploads/2021/06/14/12/08/UMfePmCGogMDBPZfSO9vhZ3XDC52PCt9udwQzNTPQWuOCbZNaaAgKqGaBhSmUQYJ.png",
+        "size": 1230,
+        "type": null,
+        "host_number": null,
+        "lang_id": 3,
+        "sort": null,
+        "status": 1,
+        "created_at": 1623672536,
+        "updated_at": 1623672536
+      }
+    ],
+    "data": {
+      "12-11-2026": {
+        "selling": "13400",
+        "buying": "12500"
+      },
+      "11-11-2026": {
+        "selling": "13560",
+        "buying": "13310"
+      },
+      "10-11-2026": {
+        "selling": "13550",
+        "buying": "13300"
+      }
+    }
+  }
+}

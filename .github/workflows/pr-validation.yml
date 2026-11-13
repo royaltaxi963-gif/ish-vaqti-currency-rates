@@ -1,0 +1,53 @@
+name: PR validation
+
+# Read-only verification for pull requests targeting main. This workflow only
+# inspects the repository: it never fetches live bank data, never writes tracked
+# data, never commits or pushes, and never deploys. Publishing stays the sole
+# responsibility of the scheduled "Update verified rates" workflow.
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+# Least privilege: the checks only need to read the checked-out tree.
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-validation-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # The only external dependency, used solely to validate the dataset against
+      # schemas/banks.schema.json. The collector and scripts/validate_data.py are
+      # standard-library only; live bank collection is deliberately not run here.
+      - name: Install JSON Schema validator
+        run: python -m pip install --disable-pip-version-check "jsonschema>=4.18,<5"
+
+      - name: Offline unit and integration tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Validate published datasets against the schema
+        run: python -m scripts.validate_data
+
+      - name: Build static site (compatibility check, no deploy)
+        run: python -m scripts.build_site
+
+      - name: Assert the checks did not modify tracked data
+        run: |
+          if ! git diff --quiet -- data/; then
+            echo "::error::PR validation modified tracked data under data/"
+            git --no-pager diff --stat -- data/
+            exit 1
+          fi
+          echo "tracked data unchanged (no data refresh, no publish)"
