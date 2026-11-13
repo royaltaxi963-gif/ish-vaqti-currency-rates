@@ -7,8 +7,8 @@ Two independent, serverless datasets, refreshed by GitHub Actions:
 2. **Commercial bank buying/selling rates** for the **14 supported banks** —
    `data/banks.json`.
 
-Runs at 09:00, 12:00, 15:00, 18:00 Asia/Tashkent via GitHub Actions
-(`cron: '0 4,7,10,13 * * *'`). GitHub Actions scheduled runs are best-effort:
+Runs at 09:00, 13:00, 18:00 Asia/Tashkent via GitHub Actions
+(`cron: '0 4,8,13 * * *'`). GitHub Actions scheduled runs are best-effort:
 they can be delayed or skipped under load, so the schedule is a target, not a
 guarantee.
 
