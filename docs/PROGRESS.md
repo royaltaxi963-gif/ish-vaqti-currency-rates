@@ -58,7 +58,7 @@ Regression tests: `tests/test_freshness_and_provenance.py` (38 tests).
 
 ## Verified evidence
 
-* `python -m unittest discover -s tests` → 181 pass (8 skipped live tests).
+* `python -m unittest discover -s tests` → 183 pass (8 skipped live tests).
 * `python -m unittest tests.test_freshness_and_provenance` → 38 pass.
 * `ISH_VAQTI_LIVE=1 python -m unittest tests.test_live_sources` → 8 passed;
   live collection reached **14/14** banks.
@@ -68,6 +68,13 @@ Regression tests: `tests/test_freshness_and_provenance.py` (38 tests).
   (draft 2020-12, `additionalProperties: false`).
 * Freshness split of the published dataset: 10 fresh, 3 stale (Universalbank,
   Davr, Xalq — daily stamps older than 24h), 1 unknown (SQB publishes no stamp).
+* GitHub Actions **PR validation** (`.github/workflows/pr-validation.yml`) is
+  green on PR #2: run 43378722810, `pull_request`, conclusion `success`, all 8
+  steps passed, 0 failed. It is `contents: read`, runs no live collection, and
+  writes nothing (the "Assert the checks did not modify tracked data" step
+  passed). PR #2 was `dirty` (a `data/banks.json` conflict with main's scheduled
+  refresh) which blocks `pull_request` runs; the conflict was resolved by
+  merging main into the branch, after which the run started automatically.
 * RUB is collected from every bank that publishes it (Trastbank, Ipak Yo'li,
   BRB, Xalq, Agrobank/SQB/Universalbank/MKBank sell-side, and the four
   fallback banks). KZT is now available for O'zmilliybank and Kapitalbank via
