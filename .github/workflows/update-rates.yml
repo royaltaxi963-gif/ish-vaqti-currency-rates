@@ -1,12 +1,12 @@
 name: Update verified rates
 
-# Asia/Tashkent 09:00, 12:00, 15:00, 18:00. GitHub Actions scheduled runs are
+# Asia/Tashkent 09:00, 13:00, 18:00. GitHub Actions scheduled runs are
 # best-effort: they can be delayed or skipped under load, so treat the schedule
 # as a target, not a guarantee.
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 4,7,10,13 * * *'
+    - cron: '0 4,8,13 * * *'
   push:
     branches: [main]
     paths:
