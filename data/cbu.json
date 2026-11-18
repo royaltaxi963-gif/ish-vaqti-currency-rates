@@ -2,32 +2,32 @@
   "schema_version": 1,
   "source": "Central Bank of Uzbekistan",
   "source_url": "https://cbu.uz/uz/arkhiv-kursov-valyut/json/",
-  "checked_at": "2026-11-17T14:09:19+00:00",
+  "checked_at": "2026-11-18T04:52:32+00:00",
   "rates": {
     "USD": {
-      "rate_uzs": 12023.61,
+      "rate_uzs": 12010.45,
       "nominal": 1,
-      "published_at": "17.11.2026"
+      "published_at": "18.11.2026"
     },
     "EUR": {
-      "rate_uzs": 13236.79,
+      "rate_uzs": 13200.69,
       "nominal": 1,
-      "published_at": "17.11.2026"
+      "published_at": "18.11.2026"
     },
     "RUB": {
-      "rate_uzs": 145.54,
+      "rate_uzs": 145.64,
       "nominal": 1,
-      "published_at": "17.11.2026"
+      "published_at": "18.11.2026"
     },
     "GBP": {
-      "rate_uzs": 15865.15,
+      "rate_uzs": 15842.98,
       "nominal": 1,
-      "published_at": "17.11.2026"
+      "published_at": "18.11.2026"
     },
     "KZT": {
-      "rate_uzs": 27.02,
+      "rate_uzs": 27.04,
       "nominal": 1,
-      "published_at": "17.11.2026"
+      "published_at": "18.11.2026"
     }
   }
 }
