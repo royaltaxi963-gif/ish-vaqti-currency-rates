@@ -2,7 +2,7 @@
   "schema_version": 1,
   "source": "Central Bank of Uzbekistan",
   "source_url": "https://cbu.uz/uz/arkhiv-kursov-valyut/json/",
-  "checked_at": "2026-11-20T08:55:11+00:00",
+  "checked_at": "2026-11-20T14:12:51+00:00",
   "rates": {
     "USD": {
       "rate_uzs": 11971.64,
