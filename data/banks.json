@@ -1,8 +1,8 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-11-22T12:18:18+00:00",
+  "generated_at": "2026-11-22T20:09:45+00:00",
   "max_age_hours": 24,
-  "stale_after": "2026-11-23T12:18:18+00:00",
+  "stale_after": "2026-11-23T20:09:45+00:00",
   "supported_currencies": [
     "USD",
     "EUR",
@@ -41,7 +41,7 @@
           "cash": {
             "buy": 11940.0,
             "sell": 12030.0,
-            "published_at": "2026-11-20T00:00:00+05:00"
+            "published_at": null
           }
         },
         "EUR": {
@@ -55,7 +55,7 @@
           "cash": {
             "buy": null,
             "sell": 147.0,
-            "published_at": "2026-11-20T00:00:00+05:00"
+            "published_at": null
           }
         },
         "GBP": {
@@ -68,13 +68,13 @@
       },
       "carried_forward": false,
       "fresh": false,
-      "stale": true
+      "stale": false
     },
     {
       "slug": "davr-bank",
       "name": "Davr Bank",
       "status": "stale",
-      "reason": "https://davrbank.uz/uz/exchange-rate#Bank ofislarida valyutalar kursi: Davr: no rates parsed; https://davrbank.uz/uz/exchange-rate#Mobil ilovada valyutalar kursi: Davr: no rates parsed",
+      "reason": "https://davrbank.uz/uz/exchange-rate: HTTP Error 500: Internal Server Error; https://davrbank.uz/uz/exchange-rate: HTTP Error 500: Internal Server Error",
       "selected_source": "official",
       "source_transition": null,
       "sources": [
@@ -84,7 +84,7 @@
           "rate_type": "cash",
           "source_type": "official",
           "status": "error",
-          "error": "https://davrbank.uz/uz/exchange-rate#Bank ofislarida valyutalar kursi: Davr: no rates parsed"
+          "error": "https://davrbank.uz/uz/exchange-rate: HTTP Error 500: Internal Server Error"
         },
         {
           "kind": "davr-html",
@@ -92,7 +92,7 @@
           "rate_type": "mobile",
           "source_type": "official",
           "status": "error",
-          "error": "https://davrbank.uz/uz/exchange-rate#Mobil ilovada valyutalar kursi: Davr: no rates parsed"
+          "error": "https://davrbank.uz/uz/exchange-rate: HTTP Error 500: Internal Server Error"
         }
       ],
       "currencies": {
@@ -148,28 +148,28 @@
           "cash": {
             "buy": 11950.0,
             "sell": 12030.0,
-            "published_at": "2026-11-22T17:16:00+05:00"
+            "published_at": "2026-11-23T00:56:00+05:00"
           }
         },
         "EUR": {
           "cash": {
             "buy": 12900.0,
             "sell": 14000.0,
-            "published_at": "2026-11-22T17:16:00+05:00"
+            "published_at": "2026-11-23T00:56:00+05:00"
           }
         },
         "RUB": {
           "cash": {
             "buy": null,
             "sell": 147.0,
-            "published_at": "2026-11-22T17:16:00+05:00"
+            "published_at": "2026-11-23T00:56:00+05:00"
           }
         },
         "GBP": {
           "cash": {
             "buy": 15350.0,
             "sell": 16350.0,
-            "published_at": "2026-11-22T17:16:00+05:00"
+            "published_at": "2026-11-23T00:56:00+05:00"
           }
         }
       },
@@ -377,48 +377,48 @@
           "cash": {
             "buy": 11930.0,
             "sell": 12050.0,
-            "published_at": "2026-11-22T17:10:01+05:00"
+            "published_at": "2026-11-23T00:50:01+05:00"
           },
           "mobile": {
             "buy": 11935.0,
             "sell": 12045.0,
-            "published_at": "2026-11-22T17:10:01+05:00"
+            "published_at": "2026-11-23T00:50:01+05:00"
           }
         },
         "EUR": {
           "cash": {
             "buy": 12580.0,
             "sell": 13210.0,
-            "published_at": "2026-11-22T17:10:01+05:00"
+            "published_at": "2026-11-23T00:50:01+05:00"
           },
           "mobile": {
             "buy": 12580.0,
             "sell": 13210.0,
-            "published_at": "2026-11-22T17:10:01+05:00"
+            "published_at": "2026-11-23T00:50:01+05:00"
           }
         },
         "RUB": {
           "cash": {
             "buy": 80.0,
             "sell": 148.0,
-            "published_at": "2026-11-22T17:10:01+05:00"
+            "published_at": "2026-11-23T00:50:01+05:00"
           },
           "mobile": {
             "buy": 80.0,
             "sell": 148.0,
-            "published_at": "2026-11-22T17:10:01+05:00"
+            "published_at": "2026-11-23T00:50:01+05:00"
           }
         },
         "GBP": {
           "cash": {
             "buy": 15090.0,
             "sell": 15950.0,
-            "published_at": "2026-11-22T17:10:01+05:00"
+            "published_at": "2026-11-23T00:50:01+05:00"
           },
           "mobile": {
             "buy": 15090.0,
             "sell": 15950.0,
-            "published_at": "2026-11-22T17:10:01+05:00"
+            "published_at": "2026-11-23T00:50:01+05:00"
           }
         }
       },
@@ -447,35 +447,35 @@
           "cash": {
             "buy": 11980.0,
             "sell": 12060.0,
-            "published_at": "2026-11-22T17:01:00+05:00"
+            "published_at": "2026-11-22T20:31:00+05:00"
           }
         },
         "EUR": {
           "cash": {
             "buy": 13000.0,
             "sell": 13230.0,
-            "published_at": "2026-11-22T17:01:00+05:00"
+            "published_at": "2026-11-22T20:31:00+05:00"
           }
         },
         "RUB": {
           "cash": {
             "buy": 115.0,
             "sell": 150.0,
-            "published_at": "2026-11-22T17:01:00+05:00"
+            "published_at": "2026-11-22T20:31:00+05:00"
           }
         },
         "KZT": {
           "cash": {
             "buy": 16.0,
             "sell": 28.0,
-            "published_at": "2026-11-22T17:01:00+05:00"
+            "published_at": "2026-11-22T20:31:00+05:00"
           }
         },
         "GBP": {
           "cash": {
             "buy": 15520.0,
             "sell": 15970.0,
-            "published_at": "2026-11-22T17:01:00+05:00"
+            "published_at": "2026-11-22T20:31:00+05:00"
           }
         }
       },
@@ -502,39 +502,39 @@
       "currencies": {
         "USD": {
           "cash": {
-            "buy": 11915.0,
-            "sell": 12035.0,
-            "published_at": "2026-11-20T23:50:00+05:00"
+            "buy": 11945.0,
+            "sell": 12060.0,
+            "published_at": "2026-11-23T01:09:00+05:00"
           },
           "mobile": {
             "buy": 11960.0,
             "sell": 11980.0,
-            "published_at": "2026-11-20T23:50:00+05:00"
+            "published_at": "2026-11-23T01:09:00+05:00"
           }
         },
         "EUR": {
           "cash": {
             "buy": 12550.0,
             "sell": 13600.0,
-            "published_at": "2026-11-20T23:50:00+05:00"
+            "published_at": "2026-11-23T01:09:00+05:00"
           },
           "mobile": {
             "buy": 13020.0,
             "sell": 13280.0,
-            "published_at": "2026-11-20T23:50:00+05:00"
+            "published_at": "2026-11-23T01:09:00+05:00"
           }
         },
         "GBP": {
           "cash": {
-            "buy": 13500.0,
+            "buy": 13450.0,
             "sell": 16850.0,
-            "published_at": "2026-11-20T23:50:00+05:00"
+            "published_at": "2026-11-23T01:09:00+05:00"
           }
         }
       },
       "carried_forward": false,
-      "fresh": false,
-      "stale": true
+      "fresh": true,
+      "stale": false
     },
     {
       "slug": "brb",
@@ -564,33 +564,33 @@
           "cash": {
             "buy": 11980.0,
             "sell": 12060.0,
-            "published_at": "2026-11-22T17:18:02+05:00"
+            "published_at": "2026-11-23T01:09:02+05:00"
           },
           "mobile": {
             "buy": 11980.0,
             "sell": 12040.0,
-            "published_at": "2026-11-22T17:18:02+05:00"
+            "published_at": "2026-11-23T01:09:02+05:00"
           }
         },
         "EUR": {
           "cash": {
             "buy": 12800.0,
             "sell": 13500.0,
-            "published_at": "2026-11-22T17:18:02+05:00"
+            "published_at": "2026-11-23T01:09:02+05:00"
           }
         },
         "RUB": {
           "cash": {
             "buy": 50.0,
             "sell": 148.0,
-            "published_at": "2026-11-22T17:18:02+05:00"
+            "published_at": "2026-11-23T01:09:02+05:00"
           }
         },
         "GBP": {
           "cash": {
             "buy": 15400.0,
             "sell": 16100.0,
-            "published_at": "2026-11-22T17:18:02+05:00"
+            "published_at": "2026-11-23T01:09:02+05:00"
           }
         }
       },
@@ -741,14 +741,14 @@
           "cash": {
             "buy": 13040.0,
             "sell": 13290.0,
-            "published_at": "2026-11-20T00:00:00+05:00"
+            "published_at": null
           }
         },
         "RUB": {
           "cash": {
             "buy": 50.0,
             "sell": 147.0,
-            "published_at": "2026-11-20T00:00:00+05:00"
+            "published_at": null
           }
         },
         "KZT": {
@@ -784,35 +784,35 @@
           "cash": {
             "buy": 11970.0,
             "sell": 12050.0,
-            "published_at": "2026-11-22T17:01:00+05:00"
+            "published_at": "2026-11-22T20:31:00+05:00"
           }
         },
         "EUR": {
           "cash": {
             "buy": 12820.0,
             "sell": 13310.0,
-            "published_at": "2026-11-22T17:01:00+05:00"
+            "published_at": "2026-11-22T20:31:00+05:00"
           }
         },
         "RUB": {
           "cash": {
             "buy": 118.0,
             "sell": 143.0,
-            "published_at": "2026-11-22T17:01:00+05:00"
+            "published_at": "2026-11-22T20:31:00+05:00"
           }
         },
         "KZT": {
           "cash": {
             "buy": 24.0,
             "sell": 27.0,
-            "published_at": "2026-11-22T17:01:00+05:00"
+            "published_at": "2026-11-22T20:31:00+05:00"
           }
         },
         "GBP": {
           "cash": {
             "buy": 15170.0,
             "sell": 16320.0,
-            "published_at": "2026-11-22T17:01:00+05:00"
+            "published_at": "2026-11-22T20:31:00+05:00"
           }
         }
       },
