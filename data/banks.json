@@ -1,8 +1,8 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-11-22T20:09:45+00:00",
+  "generated_at": "2026-11-23T14:03:25+00:00",
   "max_age_hours": 24,
-  "stale_after": "2026-11-23T20:09:45+00:00",
+  "stale_after": "2026-11-24T14:03:25+00:00",
   "supported_currencies": [
     "USD",
     "EUR",
@@ -39,16 +39,16 @@
       "currencies": {
         "USD": {
           "cash": {
-            "buy": 11940.0,
-            "sell": 12030.0,
-            "published_at": null
+            "buy": 11990.0,
+            "sell": 12060.0,
+            "published_at": "2026-11-23T00:00:00+05:00"
           }
         },
         "EUR": {
           "cash": {
-            "buy": 13000.0,
+            "buy": 12500.0,
             "sell": 15000.0,
-            "published_at": null
+            "published_at": "2026-11-23T00:00:00+05:00"
           }
         },
         "RUB": {
@@ -67,14 +67,14 @@
         }
       },
       "carried_forward": false,
-      "fresh": false,
+      "fresh": true,
       "stale": false
     },
     {
       "slug": "davr-bank",
       "name": "Davr Bank",
       "status": "stale",
-      "reason": "https://davrbank.uz/uz/exchange-rate: HTTP Error 500: Internal Server Error; https://davrbank.uz/uz/exchange-rate: HTTP Error 500: Internal Server Error",
+      "reason": "https://davrbank.uz/uz/exchange-rate#Bank ofislarida valyutalar kursi: Davr: no rates parsed; https://davrbank.uz/uz/exchange-rate#Mobil ilovada valyutalar kursi: Davr: no rates parsed",
       "selected_source": "official",
       "source_transition": null,
       "sources": [
@@ -84,7 +84,7 @@
           "rate_type": "cash",
           "source_type": "official",
           "status": "error",
-          "error": "https://davrbank.uz/uz/exchange-rate: HTTP Error 500: Internal Server Error"
+          "error": "https://davrbank.uz/uz/exchange-rate#Bank ofislarida valyutalar kursi: Davr: no rates parsed"
         },
         {
           "kind": "davr-html",
@@ -92,7 +92,7 @@
           "rate_type": "mobile",
           "source_type": "official",
           "status": "error",
-          "error": "https://davrbank.uz/uz/exchange-rate: HTTP Error 500: Internal Server Error"
+          "error": "https://davrbank.uz/uz/exchange-rate#Mobil ilovada valyutalar kursi: Davr: no rates parsed"
         }
       ],
       "currencies": {
@@ -146,30 +146,30 @@
       "currencies": {
         "USD": {
           "cash": {
-            "buy": 11950.0,
-            "sell": 12030.0,
-            "published_at": "2026-11-23T00:56:00+05:00"
+            "buy": 11960.0,
+            "sell": 12040.0,
+            "published_at": "2026-11-23T16:56:00+05:00"
           }
         },
         "EUR": {
           "cash": {
             "buy": 12900.0,
             "sell": 14000.0,
-            "published_at": "2026-11-23T00:56:00+05:00"
+            "published_at": "2026-11-23T16:56:00+05:00"
           }
         },
         "RUB": {
           "cash": {
             "buy": null,
             "sell": 147.0,
-            "published_at": "2026-11-23T00:56:00+05:00"
+            "published_at": "2026-11-23T16:56:00+05:00"
           }
         },
         "GBP": {
           "cash": {
             "buy": 15350.0,
             "sell": 16350.0,
-            "published_at": "2026-11-23T00:56:00+05:00"
+            "published_at": "2026-11-23T16:56:00+05:00"
           }
         }
       },
@@ -196,36 +196,36 @@
       "currencies": {
         "USD": {
           "cash": {
-            "buy": 11950.0,
+            "buy": 11970.0,
             "sell": 12060.0,
-            "published_at": "2026-11-20T18:00:00+05:00"
+            "published_at": "2026-11-23T09:00:00+05:00"
           }
         },
         "EUR": {
           "cash": {
             "buy": 12750.0,
             "sell": 13250.0,
-            "published_at": "2026-11-20T18:00:00+05:00"
+            "published_at": "2026-11-23T09:00:00+05:00"
           }
         },
         "RUB": {
           "cash": {
             "buy": 90.0,
             "sell": 151.0,
-            "published_at": "2026-11-20T18:00:00+05:00"
+            "published_at": "2026-11-23T09:00:00+05:00"
           }
         },
         "GBP": {
           "cash": {
-            "buy": 15450.0,
+            "buy": 15400.0,
             "sell": 16050.0,
-            "published_at": "2026-11-20T18:00:00+05:00"
+            "published_at": "2026-11-23T09:00:00+05:00"
           }
         }
       },
       "carried_forward": false,
-      "fresh": false,
-      "stale": true
+      "fresh": true,
+      "stale": false
     },
     {
       "slug": "sqb",
@@ -320,41 +320,41 @@
       "currencies": {
         "USD": {
           "cash": {
-            "buy": 11915.0,
-            "sell": 12030.0,
-            "published_at": "2026-11-20T09:00:00+05:00"
+            "buy": 11945.0,
+            "sell": 12060.0,
+            "published_at": "2026-11-23T09:00:00+05:00"
           },
           "mobile": {
             "buy": 11200.0,
-            "sell": 12030.0,
-            "published_at": "2026-11-20T09:00:00+05:00"
+            "sell": 12060.0,
+            "published_at": "2026-11-23T09:00:00+05:00"
           }
         },
         "EUR": {
           "cash": {
             "buy": 12800.0,
             "sell": 13700.0,
-            "published_at": "2026-11-20T09:00:00+05:00"
+            "published_at": "2026-11-23T09:00:00+05:00"
           }
         },
         "RUB": {
           "cash": {
             "buy": null,
             "sell": 155.0,
-            "published_at": "2026-11-20T09:00:00+05:00"
+            "published_at": "2026-11-23T09:00:00+05:00"
           }
         },
         "GBP": {
           "cash": {
             "buy": 15500.0,
             "sell": 16500.0,
-            "published_at": "2026-11-20T09:00:00+05:00"
+            "published_at": "2026-11-23T09:00:00+05:00"
           }
         }
       },
       "carried_forward": false,
-      "fresh": false,
-      "stale": true
+      "fresh": true,
+      "stale": false
     },
     {
       "slug": "ipakyulibank",
@@ -375,50 +375,50 @@
       "currencies": {
         "USD": {
           "cash": {
-            "buy": 11930.0,
-            "sell": 12050.0,
-            "published_at": "2026-11-23T00:50:01+05:00"
+            "buy": 11960.0,
+            "sell": 12060.0,
+            "published_at": "2026-11-23T18:50:01+05:00"
           },
           "mobile": {
-            "buy": 11935.0,
-            "sell": 12045.0,
-            "published_at": "2026-11-23T00:50:01+05:00"
+            "buy": 11965.0,
+            "sell": 12055.0,
+            "published_at": "2026-11-23T18:50:01+05:00"
           }
         },
         "EUR": {
           "cash": {
             "buy": 12580.0,
-            "sell": 13210.0,
-            "published_at": "2026-11-23T00:50:01+05:00"
+            "sell": 13260.0,
+            "published_at": "2026-11-23T18:50:01+05:00"
           },
           "mobile": {
             "buy": 12580.0,
-            "sell": 13210.0,
-            "published_at": "2026-11-23T00:50:01+05:00"
+            "sell": 13260.0,
+            "published_at": "2026-11-23T18:50:01+05:00"
           }
         },
         "RUB": {
           "cash": {
             "buy": 80.0,
             "sell": 148.0,
-            "published_at": "2026-11-23T00:50:01+05:00"
+            "published_at": "2026-11-23T18:50:01+05:00"
           },
           "mobile": {
             "buy": 80.0,
             "sell": 148.0,
-            "published_at": "2026-11-23T00:50:01+05:00"
+            "published_at": "2026-11-23T18:50:01+05:00"
           }
         },
         "GBP": {
           "cash": {
-            "buy": 15090.0,
-            "sell": 15950.0,
-            "published_at": "2026-11-23T00:50:01+05:00"
+            "buy": 15050.0,
+            "sell": 15960.0,
+            "published_at": "2026-11-23T18:50:01+05:00"
           },
           "mobile": {
-            "buy": 15090.0,
-            "sell": 15950.0,
-            "published_at": "2026-11-23T00:50:01+05:00"
+            "buy": 15050.0,
+            "sell": 15960.0,
+            "published_at": "2026-11-23T18:50:01+05:00"
           }
         }
       },
@@ -446,36 +446,36 @@
         "USD": {
           "cash": {
             "buy": 11980.0,
-            "sell": 12060.0,
-            "published_at": "2026-11-22T20:31:00+05:00"
+            "sell": 12070.0,
+            "published_at": "2026-11-23T19:01:00+05:00"
           }
         },
         "EUR": {
           "cash": {
             "buy": 13000.0,
             "sell": 13230.0,
-            "published_at": "2026-11-22T20:31:00+05:00"
+            "published_at": "2026-11-23T19:01:00+05:00"
           }
         },
         "RUB": {
           "cash": {
             "buy": 115.0,
             "sell": 150.0,
-            "published_at": "2026-11-22T20:31:00+05:00"
+            "published_at": "2026-11-23T19:01:00+05:00"
           }
         },
         "KZT": {
           "cash": {
             "buy": 16.0,
             "sell": 28.0,
-            "published_at": "2026-11-22T20:31:00+05:00"
+            "published_at": "2026-11-23T19:01:00+05:00"
           }
         },
         "GBP": {
           "cash": {
             "buy": 15520.0,
             "sell": 15970.0,
-            "published_at": "2026-11-22T20:31:00+05:00"
+            "published_at": "2026-11-23T19:01:00+05:00"
           }
         }
       },
@@ -503,32 +503,32 @@
         "USD": {
           "cash": {
             "buy": 11945.0,
-            "sell": 12060.0,
-            "published_at": "2026-11-23T01:09:00+05:00"
+            "sell": 12070.0,
+            "published_at": "2026-11-23T19:02:00+05:00"
           },
           "mobile": {
-            "buy": 11960.0,
-            "sell": 11980.0,
-            "published_at": "2026-11-23T01:09:00+05:00"
+            "buy": 11995.0,
+            "sell": 12015.0,
+            "published_at": "2026-11-23T19:02:00+05:00"
           }
         },
         "EUR": {
           "cash": {
             "buy": 12550.0,
             "sell": 13600.0,
-            "published_at": "2026-11-23T01:09:00+05:00"
+            "published_at": "2026-11-23T19:02:00+05:00"
           },
           "mobile": {
-            "buy": 13020.0,
-            "sell": 13280.0,
-            "published_at": "2026-11-23T01:09:00+05:00"
+            "buy": 13025.0,
+            "sell": 13285.0,
+            "published_at": "2026-11-23T19:02:00+05:00"
           }
         },
         "GBP": {
           "cash": {
             "buy": 13450.0,
             "sell": 16850.0,
-            "published_at": "2026-11-23T01:09:00+05:00"
+            "published_at": "2026-11-23T19:02:00+05:00"
           }
         }
       },
@@ -562,35 +562,35 @@
       "currencies": {
         "USD": {
           "cash": {
-            "buy": 11980.0,
-            "sell": 12060.0,
-            "published_at": "2026-11-23T01:09:02+05:00"
+            "buy": 11990.0,
+            "sell": 12070.0,
+            "published_at": "2026-11-23T19:03:03+05:00"
           },
           "mobile": {
-            "buy": 11980.0,
-            "sell": 12040.0,
-            "published_at": "2026-11-23T01:09:02+05:00"
+            "buy": 11990.0,
+            "sell": 12050.0,
+            "published_at": "2026-11-23T19:03:03+05:00"
           }
         },
         "EUR": {
           "cash": {
             "buy": 12800.0,
             "sell": 13500.0,
-            "published_at": "2026-11-23T01:09:02+05:00"
+            "published_at": "2026-11-23T19:03:03+05:00"
           }
         },
         "RUB": {
           "cash": {
             "buy": 50.0,
             "sell": 148.0,
-            "published_at": "2026-11-23T01:09:02+05:00"
+            "published_at": "2026-11-23T19:03:03+05:00"
           }
         },
         "GBP": {
           "cash": {
             "buy": 15400.0,
             "sell": 16100.0,
-            "published_at": "2026-11-23T01:09:02+05:00"
+            "published_at": "2026-11-23T19:03:03+05:00"
           }
         }
       },
@@ -618,45 +618,45 @@
         "USD": {
           "cash": {
             "buy": 11960.0,
-            "sell": 12050.0,
-            "published_at": "2026-11-20T17:39:06+05:00"
+            "sell": 12060.0,
+            "published_at": "2026-11-23T12:22:39+05:00"
           },
           "mobile": {
             "buy": 11500.0,
-            "sell": 12050.0,
-            "published_at": "2026-11-20T17:39:06+05:00"
+            "sell": 12060.0,
+            "published_at": "2026-11-23T12:22:39+05:00"
           }
         },
         "EUR": {
           "cash": {
             "buy": 12900.0,
             "sell": 13400.0,
-            "published_at": "2026-11-20T17:39:06+05:00"
+            "published_at": "2026-11-23T12:22:39+05:00"
           },
           "mobile": {
             "buy": 11000.0,
             "sell": null,
-            "published_at": "2026-11-20T17:39:06+05:00"
+            "published_at": "2026-11-23T12:22:39+05:00"
           }
         },
         "RUB": {
           "cash": {
             "buy": null,
             "sell": 180.0,
-            "published_at": "2026-11-20T17:39:06+05:00"
+            "published_at": "2026-11-23T12:22:39+05:00"
           }
         },
         "GBP": {
           "cash": {
             "buy": 15000.0,
             "sell": 16100.0,
-            "published_at": "2026-11-20T17:39:06+05:00"
+            "published_at": "2026-11-23T12:22:39+05:00"
           }
         }
       },
       "carried_forward": false,
-      "fresh": false,
-      "stale": true
+      "fresh": true,
+      "stale": false
     },
     {
       "slug": "hamkorbank",
@@ -677,14 +677,14 @@
       "currencies": {
         "USD": {
           "cash": {
-            "buy": 11950.0,
-            "sell": 12060.0,
-            "published_at": "2026-11-20T23:59:59+05:00"
+            "buy": 11960.0,
+            "sell": 12070.0,
+            "published_at": "2026-11-23T11:03:31+05:00"
           },
           "mobile": {
-            "buy": 11960.0,
-            "sell": 12050.0,
-            "published_at": "2026-11-20T23:59:59+05:00"
+            "buy": 11970.0,
+            "sell": 12060.0,
+            "published_at": "2026-11-23T11:03:31+05:00"
           }
         },
         "EUR": {
@@ -710,8 +710,8 @@
         }
       },
       "carried_forward": false,
-      "fresh": false,
-      "stale": true
+      "fresh": true,
+      "stale": false
     },
     {
       "slug": "xalq-bank",
@@ -732,23 +732,23 @@
       "currencies": {
         "USD": {
           "cash": {
-            "buy": 11900.0,
-            "sell": 12030.0,
-            "published_at": "2026-11-21T00:00:00+05:00"
+            "buy": 11970.0,
+            "sell": 12070.0,
+            "published_at": "2026-11-23T00:00:00+05:00"
           }
         },
         "EUR": {
           "cash": {
-            "buy": 13040.0,
-            "sell": 13290.0,
-            "published_at": null
+            "buy": 13035.0,
+            "sell": 13285.0,
+            "published_at": "2026-11-23T00:00:00+05:00"
           }
         },
         "RUB": {
           "cash": {
-            "buy": 50.0,
-            "sell": 147.0,
-            "published_at": null
+            "buy": 144.5,
+            "sell": 149.2,
+            "published_at": "2026-11-23T00:00:00+05:00"
           }
         },
         "KZT": {
@@ -760,8 +760,8 @@
         }
       },
       "carried_forward": false,
-      "fresh": false,
-      "stale": true
+      "fresh": true,
+      "stale": false
     },
     {
       "slug": "kapitalbank",
@@ -782,37 +782,37 @@
       "currencies": {
         "USD": {
           "cash": {
-            "buy": 11970.0,
-            "sell": 12050.0,
-            "published_at": "2026-11-22T20:31:00+05:00"
+            "buy": 11945.0,
+            "sell": 12025.0,
+            "published_at": "2026-11-23T19:01:00+05:00"
           }
         },
         "EUR": {
           "cash": {
-            "buy": 12820.0,
-            "sell": 13310.0,
-            "published_at": "2026-11-22T20:31:00+05:00"
+            "buy": 12740.0,
+            "sell": 13230.0,
+            "published_at": "2026-11-23T19:01:00+05:00"
           }
         },
         "RUB": {
           "cash": {
             "buy": 118.0,
             "sell": 143.0,
-            "published_at": "2026-11-22T20:31:00+05:00"
+            "published_at": "2026-11-23T19:01:00+05:00"
           }
         },
         "KZT": {
           "cash": {
             "buy": 24.0,
             "sell": 27.0,
-            "published_at": "2026-11-22T20:31:00+05:00"
+            "published_at": "2026-11-23T19:01:00+05:00"
           }
         },
         "GBP": {
           "cash": {
-            "buy": 15170.0,
-            "sell": 16320.0,
-            "published_at": "2026-11-22T20:31:00+05:00"
+            "buy": 15100.0,
+            "sell": 16250.0,
+            "published_at": "2026-11-23T19:01:00+05:00"
           }
         }
       },
